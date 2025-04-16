@@ -12,20 +12,56 @@ This repository documents my learning journey in SAP Treasury & Risk Management 
 ## Learning Path
 
 ### Phase 1: Technical Foundation
-- SAP Treasury Technical Architecture
-- Development Patterns in Treasury
+#### SAP Treasury Technical Architecture
+- Understanding the technical structure of SAP Treasury & Risk Management module
+- Integration points with other SAP modules
+- Key tables and data structures
+- Common interfaces and APIs
+
+#### Development Patterns in Treasury
+- Common ABAP patterns used in Treasury applications
+- Specific CDS views for Treasury data
+- Treasury-specific RAP implementations
+- OData services in Treasury context
 
 ### Phase 2: Basic Treasury Operations
-- Core Treasury Data Structures
-- Basic Treasury Processes
+#### Core Treasury Data Structures
+- Financial instruments master data
+- Business partner data in Treasury
+- Bank master data
+- Transaction data structures
+
+#### Basic Treasury Processes
+- Cash management flow
+- Payment processing
+- Bank statement processing
+- Basic reporting requirements
 
 ### Phase 3: Risk Management Fundamentals
-- Basic Risk Concepts
-- Technical Implementation of Risk Management
+#### Basic Risk Concepts
+- Types of financial risks
+- Risk measurement basics
+- Position management
+- Simple exposure calculations
+
+#### Technical Implementation of Risk Management
+- Risk-related data structures
+- Risk calculation implementations
+- Position management tables
+- Risk reporting tools
 
 ### Phase 4: Commodity Trading Basics
-- Commodity Trading Fundamentals
-- Technical Aspects of Commodity Trading
+#### Commodity Trading Fundamentals
+- Physical vs. financial trades
+- Basic trading processes
+- Price and quantity management
+- Settlement processes
+
+#### Technical Aspects of Commodity Trading
+- Commodity master data
+- Price and quantity calculations
+- Integration with trading platforms
+- Commodity-specific reporting
 
 ## Version Control
 
