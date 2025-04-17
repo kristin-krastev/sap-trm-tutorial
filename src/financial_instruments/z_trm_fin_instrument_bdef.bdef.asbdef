@@ -1,0 +1,59 @@
+managed implementation in class zbp_trm_fin_instrument unique;
+strict ( 2 );
+
+define behavior for Z_TRM_FIN_INSTRUMENT_CDS alias FinancialInstrument
+persistent table z_trm_fin_instrument
+lock master
+authorization master ( instance )
+etag master LastChangedAt
+{
+  // Administrative fields
+  field ( readonly ) InstrumentID, CreatedBy, CreatedAt, LastChangedBy, LastChangedAt;
+  field ( mandatory ) InstrumentType, Description, NominalAmount, Currency, StartDate, EndDate;
+  field ( readonly ) CounterpartyName;
+
+  // Standard operations
+  create;
+  update;
+  delete;
+
+  // Status management
+  action activate result [1] $self;
+  action terminate result [1] $self;
+  action close result [1] $self;
+
+  // Validations
+  validation validateDates on save { create; update; }
+  validation validateAmount on save { create; update; }
+  validation validateCounterparty on save { create; update; }
+  validation validateInterest on save { create; update; }
+
+  // Determinations
+  determination calculateInterest on modify { field InterestType, InterestRate; }
+  determination setInitialStatus on modify { create; }
+
+  // Associations
+  association _Conditions { create; }
+  association _BusinessPartner;
+
+  // Mapping
+  mapping for z_trm_fin_instrument
+  {
+    InstrumentID = instrument_id;
+    InstrumentType = instrument_type;
+    Description = description;
+    NominalAmount = nominal_amount;
+    Currency = currency;
+    StartDate = start_date;
+    EndDate = end_date;
+    InterestType = interest_type;
+    InterestRate = interest_rate;
+    PaymentFrequency = payment_frequency;
+    CounterpartyID = counterparty_id;
+    Status = status;
+    CreatedBy = created_by;
+    CreatedAt = created_at;
+    LastChangedBy = last_changed_by;
+    LastChangedAt = last_changed_at;
+  }
+}
