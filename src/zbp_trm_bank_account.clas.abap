@@ -7,9 +7,56 @@ CLASS zbp_trm_bank_account DEFINITION
   PUBLIC SECTION.
   PROTECTED SECTION.
   PRIVATE SECTION.
+    METHODS:
+      check_account_operations
+        IMPORTING
+          iv_account_uuid TYPE tfm_account_uuid
+        RETURNING
+          VALUE(rv_has_operations) TYPE abap_bool,
+
+      convert_currency
+        IMPORTING
+          iv_amount           TYPE tfm_amount
+          iv_from_currency    TYPE waers
+          iv_to_currency      TYPE waers
+          iv_exchange_date    TYPE datum
+        RETURNING
+          VALUE(rv_amount)    TYPE tfm_amount
+        RAISING
+          cx_tfm_currency_error.
 ENDCLASS.
 
 CLASS zbp_trm_bank_account IMPLEMENTATION.
+
+  METHOD convert_currency.
+    " Currency conversion using Treasury rates
+    SELECT SINGLE rate
+      FROM tfm_exchange_rates
+      WHERE from_currency = @iv_from_currency
+        AND to_currency = @iv_to_currency
+        AND valid_date <= @iv_exchange_date
+        AND rate_type = 'M'  " Market rate
+      ORDER BY valid_date DESCENDING
+      INTO @DATA(exchange_rate).
+
+    IF sy-subrc <> 0.
+      RAISE EXCEPTION TYPE cx_tfm_currency_error
+        MESSAGE ID 'TFM_CURRENCY'
+        NUMBER '001'
+        WITH iv_from_currency iv_to_currency.
+    ENDIF.
+
+    rv_amount = iv_amount * exchange_rate.
+  ENDMETHOD.
+
+  METHOD check_account_operations.
+    " Check for pending operations
+    SELECT SINGLE @abap_true
+      FROM tfm_cash_flow
+      WHERE account_uuid = @iv_account_uuid
+        AND status = 'PENDING'
+      INTO @rv_has_operations.
+  ENDMETHOD.
 
   METHOD validateAccount.
     " Read instance data
@@ -204,6 +251,198 @@ CLASS zbp_trm_bank_account IMPLEMENTATION.
                        severity = if_abap_behv_message=>severity-success
                        text = 'Account activated successfully' )
                    ) TO reported-bankaccount.
+    ENDLOOP.
+  ENDMETHOD.
+
+  METHOD suspendAccount.
+    " Read current account data
+    READ ENTITIES OF z_trm_bank_account_cds IN LOCAL MODE
+      ENTITY BankAccount
+        FIELDS ( AccountUUID AccountStatus )
+        WITH CORRESPONDING #( keys )
+      RESULT DATA(bank_accounts).
+
+    " Process suspension
+    LOOP AT bank_accounts INTO DATA(bank_account).
+      " Check if account can be suspended
+      IF check_account_operations( bank_account-AccountUUID ) = abap_true.
+        " Cannot suspend account with pending operations
+        APPEND VALUE #( %key = bank_account-%key ) TO failed-bankaccount.
+        APPEND VALUE #( %key = bank_account-%key
+                       %msg = new_message_with_text(
+                         severity = if_abap_behv_message=>severity-error
+                         text = 'Cannot suspend account with pending operations' )
+                     ) TO reported-bankaccount.
+        CONTINUE.
+      ENDIF.
+
+      " Update account status
+      MODIFY ENTITIES OF z_trm_bank_account_cds IN LOCAL MODE
+        ENTITY BankAccount
+          UPDATE FIELDS ( AccountStatus )
+          WITH VALUE #( (
+            %key = bank_account-%key
+            AccountStatus = 'SUSPENDED'
+          ) ).
+
+      " Return result
+      APPEND VALUE #( %key = bank_account-%key
+                     %msg = new_message_with_text(
+                       severity = if_abap_behv_message=>severity-success
+                       text = 'Account suspended successfully' )
+                   ) TO reported-bankaccount.
+    ENDLOOP.
+  ENDMETHOD.
+
+  METHOD closeAccount.
+    " Read current account data
+    READ ENTITIES OF z_trm_bank_account_cds IN LOCAL MODE
+      ENTITY BankAccount
+        FIELDS ( AccountUUID AccountStatus CurrentBalance )
+        WITH CORRESPONDING #( keys )
+      RESULT DATA(bank_accounts).
+
+    " Process closure
+    LOOP AT bank_accounts INTO DATA(bank_account).
+      " Check conditions for closure
+      IF bank_account-CurrentBalance <> 0.
+        APPEND VALUE #( %key = bank_account-%key ) TO failed-bankaccount.
+        APPEND VALUE #( %key = bank_account-%key
+                       %msg = new_message_with_text(
+                         severity = if_abap_behv_message=>severity-error
+                         text = 'Account must have zero balance to close' )
+                     ) TO reported-bankaccount.
+        CONTINUE.
+      ENDIF.
+
+      IF check_account_operations( bank_account-AccountUUID ) = abap_true.
+        APPEND VALUE #( %key = bank_account-%key ) TO failed-bankaccount.
+        APPEND VALUE #( %key = bank_account-%key
+                       %msg = new_message_with_text(
+                         severity = if_abap_behv_message=>severity-error
+                         text = 'Cannot close account with pending operations' )
+                     ) TO reported-bankaccount.
+        CONTINUE.
+      ENDIF.
+
+      " Update account status
+      MODIFY ENTITIES OF z_trm_bank_account_cds IN LOCAL MODE
+        ENTITY BankAccount
+          UPDATE FIELDS ( AccountStatus )
+          WITH VALUE #( (
+            %key = bank_account-%key
+            AccountStatus = 'CLOSED'
+          ) ).
+
+      " Return result
+      APPEND VALUE #( %key = bank_account-%key
+                     %msg = new_message_with_text(
+                       severity = if_abap_behv_message=>severity-success
+                       text = 'Account closed successfully' )
+                   ) TO reported-bankaccount.
+    ENDLOOP.
+  ENDMETHOD.
+
+  METHOD updateBalance.
+    " Read current account data
+    READ ENTITIES OF z_trm_bank_account_cds IN LOCAL MODE
+      ENTITY BankAccount
+        FIELDS ( AccountUUID AccountStatus CurrentBalance AccountCurrency )
+        WITH CORRESPONDING #( keys )
+      RESULT DATA(bank_accounts).
+
+    " Process balance update
+    LOOP AT bank_accounts INTO DATA(bank_account).
+      " Check if account is active
+      IF bank_account-AccountStatus <> 'ACTIVE'.
+        APPEND VALUE #( %key = bank_account-%key ) TO failed-bankaccount.
+        APPEND VALUE #( %key = bank_account-%key
+                       %msg = new_message_with_text(
+                         severity = if_abap_behv_message=>severity-error
+                         text = 'Balance can only be updated for active accounts' )
+                     ) TO reported-bankaccount.
+        CONTINUE.
+      ENDIF.
+
+      " Read update parameters
+      DATA(ls_params) = VALUE z_trm_balance_update(
+        amount = parameters-amount
+        currency = parameters-currency
+        value_date = parameters-value_date
+        transaction_type = parameters-transaction_type
+        reference = parameters-reference
+      ).
+
+      " Validate parameters
+      IF ls_params-amount IS INITIAL OR
+         ls_params-currency IS INITIAL OR
+         ls_params-value_date IS INITIAL OR
+         ls_params-transaction_type IS INITIAL.
+        APPEND VALUE #( %key = bank_account-%key ) TO failed-bankaccount.
+        APPEND VALUE #( %key = bank_account-%key
+                       %msg = new_message_with_text(
+                         severity = if_abap_behv_message=>severity-error
+                         text = 'All update parameters are required' )
+                     ) TO reported-bankaccount.
+        CONTINUE.
+      ENDIF.
+
+      TRY.
+          " Convert amount if currencies differ
+          DATA(lv_converted_amount) = COND #(
+            WHEN ls_params-currency = bank_account-AccountCurrency
+            THEN ls_params-amount
+            ELSE convert_currency(
+              iv_amount        = ls_params-amount
+              iv_from_currency = ls_params-currency
+              iv_to_currency   = bank_account-AccountCurrency
+              iv_exchange_date = ls_params-value_date
+            )
+          ).
+
+          " Create cash flow entry
+          MODIFY ENTITIES OF z_trm_cashflow_cds IN LOCAL MODE
+            ENTITY CashFlow
+              CREATE FIELDS (
+                FlowUUID AccountUUID FlowType Amount
+                Currency ValueDate Reference Status
+              )
+              WITH VALUE #( (
+                FlowUUID     = cl_system_uuid=>create_uuid_x16_static( )
+                AccountUUID  = bank_account-AccountUUID
+                FlowType     = ls_params-transaction_type
+                Amount      = lv_converted_amount
+                Currency    = bank_account-AccountCurrency
+                ValueDate   = ls_params-value_date
+                Reference   = ls_params-reference
+                Status      = 'POSTED'
+              ) ).
+
+          " Update account balance
+          MODIFY ENTITIES OF z_trm_bank_account_cds IN LOCAL MODE
+            ENTITY BankAccount
+              UPDATE FIELDS ( CurrentBalance LastChangedAt )
+              WITH VALUE #( (
+                %key = bank_account-%key
+                CurrentBalance = bank_account-CurrentBalance + lv_converted_amount
+                LastChangedAt = cl_abap_context_info=>get_system_timestamp( )
+              ) ).
+
+          " Return success message
+          APPEND VALUE #( %key = bank_account-%key
+                         %msg = new_message_with_text(
+                           severity = if_abap_behv_message=>severity-success
+                           text = |Balance updated successfully. New balance: { bank_account-CurrentBalance + lv_converted_amount }| )
+                       ) TO reported-bankaccount.
+
+        CATCH cx_tfm_currency_error INTO DATA(lx_currency_error).
+          APPEND VALUE #( %key = bank_account-%key ) TO failed-bankaccount.
+          APPEND VALUE #( %key = bank_account-%key
+                         %msg = new_message_with_text(
+                           severity = if_abap_behv_message=>severity-error
+                           text = lx_currency_error->get_text( ) )
+                       ) TO reported-bankaccount.
+      ENDTRY.
     ENDLOOP.
   ENDMETHOD.
 
