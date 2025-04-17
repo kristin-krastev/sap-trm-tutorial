@@ -23,7 +23,14 @@ CLASS zbp_trm_bank_account DEFINITION
         RETURNING
           VALUE(rv_amount)    TYPE tfm_amount
         RAISING
-          cx_tfm_currency_error.
+          cx_tfm_currency_error,
+
+      auto_match_transactions
+        IMPORTING
+          iv_account_uuid     TYPE tfm_account_uuid
+          iv_statement_date   TYPE datum
+        RETURNING
+          VALUE(rt_matches)   TYPE tfm_matches_tab.
 ENDCLASS.
 
 CLASS zbp_trm_bank_account IMPLEMENTATION.
@@ -443,6 +450,171 @@ CLASS zbp_trm_bank_account IMPLEMENTATION.
                            text = lx_currency_error->get_text( ) )
                        ) TO reported-bankaccount.
       ENDTRY.
+    ENDLOOP.
+  ENDMETHOD.
+
+  METHOD reconcileStatement.
+    " Read current account data
+    READ ENTITIES OF z_trm_bank_account_cds IN LOCAL MODE
+      ENTITY BankAccount
+        FIELDS ( AccountUUID AccountStatus CurrentBalance AccountCurrency LastStatementDate )
+        WITH CORRESPONDING #( keys )
+      RESULT DATA(bank_accounts).
+
+    " Process reconciliation
+    LOOP AT bank_accounts INTO DATA(bank_account).
+      " Check if account is active
+      IF bank_account-AccountStatus <> 'ACTIVE'.
+        APPEND VALUE #( %key = bank_account-%key ) TO failed-bankaccount.
+        APPEND VALUE #( %key = bank_account-%key
+                       %msg = new_message_with_text(
+                         severity = if_abap_behv_message=>severity-error
+                         text = 'Statement can only be reconciled for active accounts' )
+                     ) TO reported-bankaccount.
+        CONTINUE.
+      ENDIF.
+
+      " Read reconciliation parameters
+      DATA(ls_params) = VALUE z_trm_statement_recon(
+        statement_id = parameters-statement_id
+        statement_date = parameters-statement_date
+        closing_balance = parameters-closing_balance
+        currency = parameters-currency
+        auto_match = parameters-auto_match
+      ).
+
+      " Validate parameters
+      IF ls_params-statement_date IS INITIAL OR
+         ls_params-closing_balance IS INITIAL OR
+         ls_params-currency IS INITIAL.
+        APPEND VALUE #( %key = bank_account-%key ) TO failed-bankaccount.
+        APPEND VALUE #( %key = bank_account-%key
+                       %msg = new_message_with_text(
+                         severity = if_abap_behv_message=>severity-error
+                         text = 'All reconciliation parameters are required' )
+                     ) TO reported-bankaccount.
+        CONTINUE.
+      ENDIF.
+
+      " Check statement date sequence
+      IF ls_params-statement_date <= bank_account-LastStatementDate.
+        APPEND VALUE #( %key = bank_account-%key ) TO failed-bankaccount.
+        APPEND VALUE #( %key = bank_account-%key
+                       %msg = new_message_with_text(
+                         severity = if_abap_behv_message=>severity-error
+                         text = 'Statement date must be after last reconciliation' )
+                     ) TO reported-bankaccount.
+        CONTINUE.
+      ENDIF.
+
+      TRY.
+          " Convert closing balance if needed
+          DATA(lv_converted_balance) = COND #(
+            WHEN ls_params-currency = bank_account-AccountCurrency
+            THEN ls_params-closing_balance
+            ELSE convert_currency(
+              iv_amount        = ls_params-closing_balance
+              iv_from_currency = ls_params-currency
+              iv_to_currency   = bank_account-AccountCurrency
+              iv_exchange_date = ls_params-statement_date
+            )
+          ).
+
+          " Perform auto-matching if requested
+          IF ls_params-auto_match = abap_true.
+            DATA(lt_matches) = auto_match_transactions(
+              iv_account_uuid   = bank_account-AccountUUID
+              iv_statement_date = ls_params-statement_date
+            ).
+          ENDIF.
+
+          " Calculate difference
+          DATA(lv_difference) = lv_converted_balance - bank_account-CurrentBalance.
+
+          " Create reconciliation record
+          MODIFY ENTITIES OF z_trm_statement_recon_cds IN LOCAL MODE
+            ENTITY StatementRecon
+              CREATE FIELDS (
+                ReconUUID StatementID AccountUUID StatementDate
+                ClosingBalance Currency Difference Status
+              )
+              WITH VALUE #( (
+                ReconUUID = cl_system_uuid=>create_uuid_x16_static( )
+                StatementID = ls_params-statement_id
+                AccountUUID = bank_account-AccountUUID
+                StatementDate = ls_params-statement_date
+                ClosingBalance = lv_converted_balance
+                Currency = bank_account-AccountCurrency
+                Difference = lv_difference
+                Status = COND #( WHEN lv_difference = 0 THEN 'MATCHED'
+                                ELSE 'UNMATCHED' )
+              ) ).
+
+          " Update account last statement date
+          MODIFY ENTITIES OF z_trm_bank_account_cds IN LOCAL MODE
+            ENTITY BankAccount
+              UPDATE FIELDS ( LastStatementDate LastChangedAt )
+              WITH VALUE #( (
+                %key = bank_account-%key
+                LastStatementDate = ls_params-statement_date
+                LastChangedAt = cl_abap_context_info=>get_system_timestamp( )
+              ) ).
+
+          " Return result message
+          APPEND VALUE #( %key = bank_account-%key
+                         %msg = new_message_with_text(
+                           severity = COND #( WHEN lv_difference = 0
+                                            THEN if_abap_behv_message=>severity-success
+                                            ELSE if_abap_behv_message=>severity-warning )
+                           text = COND #( WHEN lv_difference = 0
+                                        THEN 'Statement reconciled successfully'
+                                        ELSE |Statement reconciled with difference: { lv_difference }| )
+                         )
+                       ) TO reported-bankaccount.
+
+        CATCH cx_tfm_currency_error INTO DATA(lx_currency_error).
+          APPEND VALUE #( %key = bank_account-%key ) TO failed-bankaccount.
+          APPEND VALUE #( %key = bank_account-%key
+                         %msg = new_message_with_text(
+                           severity = if_abap_behv_message=>severity-error
+                           text = lx_currency_error->get_text( ) )
+                       ) TO reported-bankaccount.
+      ENDTRY.
+    ENDLOOP.
+  ENDMETHOD.
+
+  METHOD auto_match_transactions.
+    " Get unmatched transactions
+    SELECT FROM tfm_cash_flow
+      FIELDS flow_uuid, flow_amount, value_date, reference
+      WHERE account_uuid = @iv_account_uuid
+        AND status = 'POSTED'
+        AND value_date <= @iv_statement_date
+        AND matched = @abap_false
+      INTO TABLE @DATA(lt_transactions).
+
+    " Get statement entries
+    SELECT FROM tfm_bank_stmt
+      FIELDS stmt_entry_uuid, entry_amount, entry_date, reference
+      WHERE account_uuid = @iv_account_uuid
+        AND entry_date <= @iv_statement_date
+        AND matched = @abap_false
+      INTO TABLE @DATA(lt_stmt_entries).
+
+    " Perform matching based on amount and reference
+    LOOP AT lt_transactions INTO DATA(ls_trans).
+      READ TABLE lt_stmt_entries INTO DATA(ls_stmt)
+        WITH KEY entry_amount = ls_trans-flow_amount
+                 reference   = ls_trans-reference.
+      IF sy-subrc = 0.
+        " Add to matches table
+        APPEND VALUE #(
+          flow_uuid      = ls_trans-flow_uuid
+          stmt_entry_uuid = ls_stmt-stmt_entry_uuid
+          match_type     = 'AUTO'
+          match_date     = sy-datum
+        ) TO rt_matches.
+      ENDIF.
     ENDLOOP.
   ENDMETHOD.
 
