@@ -1,0 +1,58 @@
+managed implementation in class zbp_trm_bank_account unique;
+strict ( 2 );
+
+define behavior for Z_TRM_BANK_ACCOUNT_CDS alias BankAccount
+persistent table tfm_bank_account
+lock master
+authorization master ( instance )
+etag master LastChangedAt
+{
+  // Administrative fields
+  field ( readonly ) AccountUUID, CreatedBy, CreatedAt, LastChangedBy, LastChangedAt;
+  field ( readonly ) CurrentBalance, ProjectedBalance, ValueDateBalance;
+  field ( mandatory ) CompanyCode, AccountID, BankID, Country, Currency;
+
+  // Validations
+  validation validateAccount on save { create; update; }
+  validation validateBalance on save { create; update; }
+  validation checkBankDetails on save { create; update; }
+
+  // Determinations
+  determination setAccountStatus on modify { field AccountStatus; }
+  determination calculateBalances on modify { field CurrentBalance, ProjectedBalance; }
+
+  // Actions for bank account management
+  action activateAccount result [1] $self;
+  action suspendAccount result [1] $self;
+  action closeAccount result [1] $self;
+
+  // Actions for cash management
+  action updateBalance parameter Z_TRM_BALANCE_UPDATE result [1] $self;
+  action reconcileStatement parameter Z_TRM_STATEMENT_RECON result [1] $self;
+  action generateReport result [1] $self;
+
+  // Standard operations
+  create;
+  update;
+  delete;
+
+  // Mapping
+  mapping for tfm_bank_account
+  {
+    AccountUUID = account_uuid;
+    CompanyCode = company_code;
+    AccountID = account_id;
+    BankID = bank_id;
+    Country = country;
+    Currency = currency;
+    AccountType = account_type;
+    AccountStatus = account_status;
+    CurrentBalance = current_balance;
+    ProjectedBalance = projected_balance;
+    LastStatementDate = last_statement_date;
+    CreatedBy = created_by;
+    CreatedAt = created_at;
+    LastChangedBy = last_changed_by;
+    LastChangedAt = last_changed_at;
+  }
+}
