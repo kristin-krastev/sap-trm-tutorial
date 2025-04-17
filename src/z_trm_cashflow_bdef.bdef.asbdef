@@ -1,0 +1,49 @@
+managed implementation in class zbp_trm_cashflow unique;
+strict ( 2 );
+
+define behavior for Z_TRM_CASHFLOW_CDS alias CashFlow
+persistent table tfm_cash_flow
+lock master
+authorization master ( instance )
+etag master LastChangedAt
+{
+  // Standard administrative fields handling
+  field ( readonly ) FlowUUID, CreatedBy, CreatedAt, LastChangedBy, LastChangedAt;
+  field ( mandatory ) CompanyCode, FlowType, BusinessDate, ValueDate, FlowAmount, FlowCurrency;
+
+  // Validations
+  validation validateDates on save { create; update; }
+  validation validateAmount on save { create; update; }
+  validation validateCurrency on save { create; update; }
+  validation checkTreasuryAuthority on save { create; update; }
+
+  // Treasury-specific determinations
+  determination calculateRiskAdjustment on modify { field FlowType; }
+  determination setExchangeRate on modify { field FlowCurrency, ValueDate; }
+
+  // Actions for Treasury operations
+  action confirmCashFlow result [1] $self;
+  action reverseCashFlow result [1] $self;
+  action splitCashFlow parameter Z_TRM_CASHFLOW_SPLIT result [1..*] $self;
+
+  // Standard operations
+  create;
+  update;
+  delete;
+
+  // Mapping
+  mapping for tfm_cash_flow
+  {
+    FlowUUID = flow_uuid;
+    CompanyCode = bukrs;
+    FlowType = flow_type;
+    BusinessDate = business_date;
+    ValueDate = value_date;
+    FlowAmount = flow_amount;
+    FlowCurrency = flow_currency;
+    CreatedBy = created_by;
+    CreatedAt = created_at;
+    LastChangedBy = last_changed_by;
+    LastChangedAt = last_changed_at;
+  }
+}
