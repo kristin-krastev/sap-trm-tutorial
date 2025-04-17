@@ -1,0 +1,43 @@
+managed implementation in class zbp_trm_position unique;
+strict ( 2 );
+
+define behavior for Z_TRM_POSITION_CDS alias Position
+persistent table tfm_pos
+lock master
+authorization master ( instance )
+etag master LastChangedAt
+{
+  create;
+  update;
+  delete;
+
+  // Field controls
+  field ( readonly ) PositionUUID, CreatedBy, CreatedAt, LastChangedBy, LastChangedAt;
+  field ( mandatory ) CompanyCode, PositionID, InstrumentType, Amount, Currency;
+
+  // Validations
+  validation validateCurrency on save { create; update; }
+  validation validateAmount on save { create; update; }
+
+  // Determinations
+  determination calculateRisk on modify { field Amount, Currency; }
+
+  // Actions
+  action ( features : instance ) recalculateRisk result [1] $self;
+
+  // Mapping
+  mapping for tfm_pos
+  {
+    PositionUUID = position_uuid;
+    CompanyCode = bukrs;
+    PositionID = position_id;
+    InstrumentType = instr_type;
+    Amount = amount;
+    Currency = currency;
+    ValueDate = value_date;
+    CreatedBy = created_by;
+    CreatedAt = created_at;
+    LastChangedBy = last_changed_by;
+    LastChangedAt = last_changed_at;
+  }
+}

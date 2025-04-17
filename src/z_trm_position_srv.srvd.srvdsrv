@@ -1,0 +1,4 @@
+@EndUserText.label: 'Treasury Position Service'
+define service Z_TRM_POSITION_SRV {
+  expose Z_TRM_POSITION_CDS as Position;
+}
