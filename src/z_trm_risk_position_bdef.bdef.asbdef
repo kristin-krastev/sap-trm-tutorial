@@ -1,0 +1,53 @@
+managed implementation in class zbp_trm_risk_position unique;
+strict ( 2 );
+
+define behavior for Z_TRM_RISK_POSITION_CDS alias RiskPosition
+persistent table z_trm_risk_position
+lock master
+authorization master ( instance )
+etag master LastChangedAt
+{
+  // Administrative fields
+  field ( readonly ) PositionUUID, CreatedBy, CreatedAt, LastChangedBy, LastChangedAt;
+  field ( mandatory ) CompanyCode, PositionID, RiskType, PositionAmount, PositionCurrency, PositionDate;
+
+  // Validations
+  validation validatePosition on save { create; update; }
+  validation validateAmount on save { create; update; }
+  validation validateRiskType on save { create; update; }
+  validation checkLimits on save { create; update; }
+
+  // Determinations
+  determination calculateRiskAmount on modify { field PositionAmount, PositionCurrency; }
+  determination setRiskLevel on modify { field RiskAmount; }
+
+  // Actions
+  action ( features : instance ) recalculateRisk result [1] $self;
+  action ( features : instance ) checkLimitBreach result [1] $self;
+  action ( features : instance ) generateAlert parameter Z_TRM_RISK_ALERT result [1] $self;
+
+  // Standard operations
+  create;
+  update;
+  delete;
+
+  // Mapping
+  mapping for z_trm_risk_position
+  {
+    PositionUUID = position_uuid;
+    PositionID = position_id;
+    CompanyCode = company_code;
+    RiskType = risk_type;
+    CounterpartyID = counterparty_id;
+    PositionAmount = position_amount;
+    PositionCurrency = position_currency;
+    PositionDate = position_date;
+    RiskAmount = risk_amount;
+    ConfidenceLevel = confidence_level;
+    TimeHorizon = time_horizon;
+    CreatedBy = created_by;
+    CreatedAt = created_at;
+    LastChangedBy = last_changed_by;
+    LastChangedAt = last_changed_at;
+  }
+}
