@@ -1,0 +1,51 @@
+managed implementation in class zbp_trm_market_data unique;
+strict ( 2 );
+
+define behavior for Z_TRM_MARKET_DATA_C_CDS alias MarketData
+persistent table z_trm_market_data
+lock master
+authorization master ( instance )
+{
+  field ( readonly ) MarketDataUUID;
+  field ( mandatory ) MarketDataType, InstrumentID, PriceValue, PriceCurrency, ValidFrom;
+  field ( readonly ) CreatedBy, CreatedAt, LastChangedBy, LastChangedAt, ValidationTimestamp, ValidationUser;
+
+  // Validations
+  validation validateMarketData on save { create; update; }
+  validation validateDates on save { create; update; }
+  validation validatePriceRange on save { create; update; }
+
+  // Determinations
+  determination calculateConfidenceScore on modify { field PriceValue, DataSource; }
+
+  // Actions
+  action validateData result [1] $self;
+  action rejectData result [1] $self;
+  action requestMarketDataUpdate result [1] $self;
+
+  // Standard operations
+  create;
+  update;
+  delete;
+
+  // Mapping
+  mapping for z_trm_market_data
+  {
+    MarketDataUUID = market_data_uuid;
+    MarketDataType = market_data_type;
+    InstrumentID = instrument_id;
+    PriceValue = price_value;
+    PriceCurrency = price_currency;
+    ValidFrom = valid_from;
+    ValidTo = valid_to;
+    DataSource = data_source;
+    ConfidenceScore = confidence_score;
+    IsValidated = is_validated;
+    ValidationTimestamp = validation_timestamp;
+    ValidationUser = validation_user;
+    CreatedBy = created_by;
+    CreatedAt = created_at;
+    LastChangedBy = last_changed_by;
+    LastChangedAt = last_changed_at;
+  }
+}
