@@ -1,0 +1,54 @@
+managed implementation in class zbp_trm_limit unique;
+strict ( 2 );
+
+define behavior for Z_TRM_LIMIT_C_CDS alias Limit
+persistent table z_trm_risk_limit
+lock master
+authorization master ( instance )
+{
+  field ( readonly ) LimitUUID;
+  field ( mandatory ) LimitType, LimitCategory, ObjectID, LimitAmount, LimitCurrency, ValidFrom;
+  field ( readonly ) CreatedBy, CreatedAt, LastChangedBy, LastChangedAt, ApprovalTimestamp;
+
+  // Validations
+  validation validateLimit on save { create; update; }
+  validation validateDates on save { create; update; }
+  validation validateAmount on save { create; update; }
+  validation checkApprovalAuthority on save { create; update; }
+
+  // Determinations
+  determination calculateUtilization on modify { field LimitAmount, UtilizedAmount; }
+
+  // Actions
+  action approveLimitChange result [1] $self;
+  action rejectLimitChange result [1] $self;
+  action requestLimitIncrease result [1] $self parameter Z_TRM_LIMIT_INCREASE;
+  action resetUtilization result [1] $self;
+
+  // Standard operations
+  create;
+  update;
+  delete;
+
+  // Mapping
+  mapping for z_trm_risk_limit
+  {
+    LimitUUID = limit_uuid;
+    LimitType = limit_type;
+    LimitCategory = limit_category;
+    ObjectID = object_id;
+    LimitAmount = limit_amount;
+    LimitCurrency = limit_currency;
+    ValidFrom = valid_from;
+    ValidTo = valid_to;
+    WarningThreshold = warning_threshold;
+    UtilizedAmount = utilized_amount;
+    ApprovalStatus = approval_status;
+    ApproverID = approver_id;
+    ApprovalTimestamp = approval_timestamp;
+    CreatedBy = created_by;
+    CreatedAt = created_at;
+    LastChangedBy = last_changed_by;
+    LastChangedAt = last_changed_at;
+  }
+}
