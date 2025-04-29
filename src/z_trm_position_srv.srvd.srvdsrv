@@ -1,0 +1,6 @@
+@EndUserText.label: 'Treasury Position Service Definition'
+define service Z_TRM_POSITION_SRV {
+  expose Z_TRM_POSITION_CDS as Position;
+  expose Z_TRM_CASHFLOW_CDS as Cashflow;
+  expose Z_TRM_FIN_INSTRUMENT_CDS as Instrument;
+}

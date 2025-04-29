@@ -1,0 +1,34 @@
+managed implementation in class zbp_trm_cashflow unique;
+strict ( 2 );
+
+define behavior for ZI_TRM_Cashflow alias Cashflow
+persistent table ztrmcf
+lock master
+authorization master ( instance )
+{
+  create;
+  update;
+  delete;
+
+  field ( readonly ) CashflowID;
+  field ( readonly ) CreatedBy;
+  field ( readonly ) CreatedAt;
+  field ( readonly ) ChangedBy;
+  field ( readonly ) ChangedAt;
+
+  association _Position { create; }
+
+  mapping for ztrmcf
+  {
+    CashflowID = cashflow_id;
+    PositionID = position_id;
+    CashflowType = cashflow_type;
+    Amount = cashflow_amount;
+    Currency = currency;
+    ValueDate = value_date;
+    CreatedBy = created_by;
+    CreatedAt = created_at;
+    ChangedBy = changed_by;
+    ChangedAt = changed_at;
+  }
+}

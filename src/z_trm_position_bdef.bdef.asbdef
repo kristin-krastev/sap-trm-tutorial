@@ -1,0 +1,40 @@
+managed implementation in class zbp_trm_position unique;
+strict ( 2 );
+
+define behavior for Z_TRM_POSITION_CDS alias Position
+persistent table ztrmpos
+lock master
+authorization master ( instance )
+etag master ChangedAt
+{
+  create;
+  update;
+  delete;
+
+  field ( readonly ) PositionID, CreatedBy, CreatedAt, ChangedBy, ChangedAt;
+  field ( mandatory ) PositionDescription, InstrumentID, Amount, Currency, ValidFrom, ValidTo;
+
+  validation validateDates on save { create; update; }
+  validation validateAmount on save { create; update; }
+  validation validateInstrument on save { create; update; }
+
+  determination generatePositionID on modify { create; }
+
+  association _Cashflows { create; }
+  association _Instrument;
+
+  mapping for ztrmpos
+  {
+    PositionID = position_id;
+    PositionDescription = position_descr;
+    InstrumentID = instrument_id;
+    Amount = position_amount;
+    Currency = currency;
+    ValidFrom = valid_from;
+    ValidTo = valid_to;
+    CreatedBy = created_by;
+    CreatedAt = created_at;
+    ChangedBy = changed_by;
+    ChangedAt = changed_at;
+  }
+}
