@@ -1,0 +1,40 @@
+managed implementation in class zbp_kkr_i_instrument unique;
+strict ( 2 );
+
+define behavior for ZKKR_I_INSTRUMENT alias Instrument
+persistent table ztrminst
+lock master
+authorization master ( instance )
+etag master ChangedAt
+{
+  create;
+  update;
+  delete;
+
+  // Field controls
+  field ( mandatory ) InstrumentID, InstrumentType, Currency;
+  field ( readonly ) CreatedBy, CreatedAt, ChangedBy, ChangedAt;
+
+  // Validations
+  validation validateDates on save { create; update; }
+  validation validateAmount on save { create; update; }
+  validation validateRate on save { create; update; }
+
+  // Mapping
+  mapping for ztrminst
+  {
+    InstrumentID = instrument_id;
+    InstrumentType = instrument_type;
+    InstrumentDescription = instrument_descr;
+    NominalAmount = nominal_amount;
+    Currency = currency;
+    InterestRate = interest_rate;
+    StartDate = start_date;
+    EndDate = end_date;
+    Issuer = issuer;
+    CreatedBy = created_by;
+    CreatedAt = created_at;
+    ChangedBy = changed_by;
+    ChangedAt = changed_at;
+  }
+}

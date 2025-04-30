@@ -1,0 +1,41 @@
+managed implementation in class zbp_kkr_i_position unique;
+strict ( 2 );
+
+define behavior for ZKKR_I_POSITION alias Position
+persistent table ztrmpos
+lock master
+authorization master ( instance )
+etag master ChangedAt
+{
+  create;
+  update;
+  delete;
+
+  // Field controls
+  field ( mandatory ) PositionID, InstrumentID;
+  field ( readonly ) CreatedBy, CreatedAt, ChangedBy, ChangedAt;
+
+  // Validations
+  validation validateDates on save { create; update; }
+  validation validateInstrument on save { create; update; }
+
+  // Associations
+  association _Cashflow { create; }
+  association _Instrument;
+
+  // Mapping
+  mapping for ztrmpos
+  {
+    PositionID = position_id;
+    PositionDescription = position_descr;
+    InstrumentID = instrument_id;
+    Amount = position_amount;
+    Currency = currency;
+    ValidFrom = valid_from;
+    ValidTo = valid_to;
+    CreatedBy = created_by;
+    CreatedAt = created_at;
+    ChangedBy = changed_by;
+    ChangedAt = changed_at;
+  }
+}
