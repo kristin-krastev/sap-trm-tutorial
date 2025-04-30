@@ -1,15 +1,13 @@
+@AbapCatalog.sqlViewName: 'ZKKRRPOS'
 @AbapCatalog.viewEnhancementCategory: [#NONE]
 @AccessControl.authorizationCheck: #NOT_REQUIRED
-@EndUserText.label: 'Interface View for Treasury Positions'
-@Metadata.ignorePropagatedAnnotations: true
-@ObjectModel.usageType:{
-  serviceQuality: #X,
-  sizeCategory: #S,
-  dataClass: #MASTER
-}
-define view entity ZI_TRM_Position
-  as select from ztrmpos
-  association [1..1] to ZI_TRM_Instrument as _Instrument on $projection.InstrumentID = _Instrument.InstrumentID
+@EndUserText.label: 'Treasury Position Basic View'
+@VDM.viewType: #BASIC
+
+define view ZKKR_R_POSITION
+  as select from ztrmpos as Position
+  association [0..*] to ZKKR_R_CASHFLOW   as _Cashflow   on $projection.PositionID = _Cashflow.PositionID
+  association [1..1] to ZKKR_R_INSTRUMENT as _Instrument on $projection.InstrumentID = _Instrument.InstrumentID
 {
   key position_id    as PositionID,
       position_descr as PositionDescription,
@@ -32,5 +30,6 @@ define view entity ZI_TRM_Position
       changed_at     as ChangedAt,
 
       // Associations
+      _Cashflow,
       _Instrument
 }
