@@ -24,18 +24,5 @@ etag master ChangedAt
   association _Instrument;
 
   // Mapping
-  mapping for ztrmpos
-  {
-    PositionID = position_id;
-    PositionDescription = position_descr;
-    InstrumentID = instrument_id;
-    Amount = position_amount;
-    Currency = currency;
-    ValidFrom = valid_from;
-    ValidTo = valid_to;
-    CreatedBy = created_by;
-    CreatedAt = created_at;
-    ChangedBy = changed_by;
-    ChangedAt = changed_at;
-  }
+  mapping for ztrmpos corresponding;
 }

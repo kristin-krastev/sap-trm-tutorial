@@ -22,17 +22,5 @@ etag master ChangedAt
   association _Position;
 
   // Mapping
-  mapping for ztrmcf
-  {
-    CashflowID = cashflow_id;
-    PositionID = position_id;
-    CashflowType = cashflow_type;
-    Amount = cashflow_amount;
-    Currency = currency;
-    ValueDate = value_date;
-    CreatedBy = created_by;
-    CreatedAt = created_at;
-    ChangedBy = changed_by;
-    ChangedAt = changed_at;
-  }
+  mapping for ztrmcf corresponding;
 }
