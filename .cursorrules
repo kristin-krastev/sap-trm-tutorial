@@ -1,0 +1,57 @@
+# SAP RAP Development Rules
+
+## General Conventions
+- Always follow SAP RAP naming conventions (Z or Y namespace)
+- Use meaningful and consistent suffixes (_R_, _I_, _C_)
+- Include proper documentation and comments
+
+## Required Features
+- Always implement draft handling for transactional apps
+- Use managed scenarios where possible
+- Implement proper authorization checks
+- Use late numbering for IDs
+- Include ETag handling
+
+## CDS View Patterns
+- Basic views should use suffix _R_
+- Interface views should use suffix _I_
+- Consumption views should use suffix _C_
+- Root views must use "define root view entity"
+- Child views must use "define view entity"
+- Always include @EndUserText.label annotations
+- Always include @ObjectModel annotations for semantic keys
+
+## Behavior Definitions
+- Include strict mode (2)
+- Use corresponding fields mapping
+- Mark key fields as readonly
+- Include proper validations
+- Include proper determinations
+- Include draft actions for root entities
+- Add associations with draft support
+
+## UI Annotations
+- Include headerInfo
+- Include proper lineItem positions
+- Include identification annotations
+- Include semantic field annotations
+- Include proper facet definitions
+
+## Database Tables
+- Include administrative fields (created/changed)
+- Use proper data elements
+- Include proper key fields
+- Draft tables must include all draft-specific fields
+
+## Implementation Classes
+- Follow handler pattern (create/update/delete)
+- Implement proper validations
+- Handle determinations efficiently
+- Include proper error messages
+- Follow clean code principles
+
+## Testing
+- Create unit tests for validations
+- Create integration tests for scenarios
+- Test draft handling
+- Test error scenarios
