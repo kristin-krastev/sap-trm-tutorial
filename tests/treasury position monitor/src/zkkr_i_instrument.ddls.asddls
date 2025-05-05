@@ -18,7 +18,7 @@
     }
 }
 
-define view ZKKR_I_INSTRUMENT
+define view entity ZKKR_I_INSTRUMENT
   as select from ZKKR_R_INSTRUMENT as Instrument
 {
       @UI.facet: [

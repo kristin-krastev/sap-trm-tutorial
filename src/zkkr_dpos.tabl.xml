@@ -1,0 +1,34 @@
+@EndUserText.label : 'Draft table for Position'
+@AbapCatalog.enhancement.category : #NOT_EXTENSIBLE
+@AbapCatalog.tableCategory : #TRANSPARENT
+@AbapCatalog.deliveryClass : #A
+@AbapCatalog.dataMaintenance : #RESTRICTED
+define table zkkr_dpos {
+  key client            : abap.clnt not null;
+  @EndUserText.label : 'Position ID'
+  key positionid        : abap.char(20) not null;
+  @EndUserText.label : 'Position Description'
+  positiondescription   : abap.char(100);
+  @EndUserText.label : 'Instrument ID'
+  instrumentid          : abap.char(20);
+  @EndUserText.label : 'Amount'
+  @Semantics.amount.currencyCode :'zkkr_dpos.currency'
+  amount               : abap.curr(23,2);
+  @EndUserText.label : 'Currency'
+  currency             : abap.cuky;
+  @EndUserText.label : 'Valid From'
+  validfrom            : abap.dats;
+  @EndUserText.label : 'Valid To'
+  validto              : abap.dats;
+  @EndUserText.label : 'Created By'
+  createdby            : syuname;
+  @EndUserText.label : 'Created At'
+  createdat            : timestampl;
+  @EndUserText.label : 'Changed By'
+  changedby            : syuname;
+  @EndUserText.label : 'Changed At'
+  changedat            : timestampl;
+
+  // Draft administration fields
+  include SYCH_BDL_DRAFT_ADMIN_INC;
+}

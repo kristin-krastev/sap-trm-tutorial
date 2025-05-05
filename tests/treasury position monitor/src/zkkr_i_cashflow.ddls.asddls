@@ -18,7 +18,7 @@
     }
 }
 
-define view ZKKR_I_CASHFLOW
+define view entity ZKKR_I_CASHFLOW
   as select from ZKKR_R_CASHFLOW as Cashflow
   association [1..1] to ZKKR_I_POSITION as _Position on $projection.PositionID = _Position.PositionID
 {

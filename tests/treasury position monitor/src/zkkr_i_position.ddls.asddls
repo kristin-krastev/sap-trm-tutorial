@@ -3,6 +3,8 @@
 @AccessControl.authorizationCheck: #NOT_REQUIRED
 @EndUserText.label: 'Treasury Position Interface View'
 @VDM.viewType: #COMPOSITE
+@ObjectModel.compositionRoot: true
+@ObjectModel.transactional: true
 @Metadata.allowExtensions: true
 
 @ObjectModel: {
@@ -20,7 +22,7 @@
 
 define view ZKKR_I_POSITION
   as select from ZKKR_R_POSITION as Position
-  association [0..*] to ZKKR_I_CASHFLOW   as _Cashflow   on $projection.PositionID = _Cashflow.PositionID
+  composition [0..*] of ZKKR_I_CASHFLOW   as _Cashflow
   association [1..1] to ZKKR_I_INSTRUMENT as _Instrument on $projection.InstrumentID = _Instrument.InstrumentID
 {
       @UI.facet: [

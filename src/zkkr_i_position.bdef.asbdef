@@ -13,20 +13,49 @@ etag master ChangedAt
   update;
   delete;
 
-  // Draft actions
-  draft action Edit;
-  draft action Activate;
-  draft action Discard;
-  draft action Resume;
-  draft determine action Prepare;
-
   // Field controls
   field ( readonly ) PositionID, CreatedBy, CreatedAt, ChangedBy, ChangedAt;
   field ( mandatory ) InstrumentID;
 
-  // Validations
-  validation validateDates on save { create; update; }
-  validation validateInstrument on save { create; update; }
+  // Position validations
+  validation validateDates on save {
+    create;
+    update;
+    field ValidFrom;
+    field ValidTo;
+  }
+
+  validation validateInstrument on save {
+    create;
+    update;
+    field InstrumentID;
+  }
+
+  // Cashflow validations
+  validation validateCashflowAmount on save {
+    create;
+    update;
+    field Cashflow.Amount;
+    field Cashflow.Currency;
+  }
+
+  validation validateCashflowDate on save {
+    create;
+    update;
+    field Cashflow.ValueDate;
+  }
+
+  // Draft actions
+  draft action Edit;
+  draft action Activate optimized;
+  draft action Discard;
+  draft action Resume;
+  draft determine action Prepare {
+    validation validateDates;
+    validation validateInstrument;
+    validation validateCashflowAmount;
+    validation validateCashflowDate;
+  }
 
   // Associations
   association _Cashflow { create; with draft; }
@@ -50,10 +79,6 @@ etag master ChangedAt
   // Field controls
   field ( readonly ) CashflowID, PositionID, CreatedBy, CreatedAt, ChangedBy, ChangedAt;
   field ( mandatory ) Amount, Currency, ValueDate;
-
-  // Validations
-  validation validateAmount on save { create; update; }
-  validation validateDate on save { create; update; }
 
   // Associations
   association _Position { with draft; }
