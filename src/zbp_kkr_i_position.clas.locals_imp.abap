@@ -16,8 +16,11 @@ CLASS lhc_Position DEFINITION INHERITING FROM cl_abap_behavior_handler.
       calculatePositionID FOR DETERMINE ON SAVE
         IMPORTING keys FOR Position~calculatePositionID,
 
-      get_instance_features FOR INSTANCE FEATURES
-        IMPORTING keys REQUEST requested_features FOR Position RESULT result.
+      calculateCashflowID FOR DETERMINE ON SAVE
+        IMPORTING keys FOR Cashflow~calculateCashflowID,
+
+      get_instance_authorizations FOR INSTANCE AUTHORIZATION
+        IMPORTING keys REQUEST requested_authorizations FOR Position RESULT result.
 
 ENDCLASS.
 
@@ -61,8 +64,8 @@ CLASS lhc_Position IMPLEMENTATION.
         FIELDS ( InstrumentID ) WITH CORRESPONDING #( keys )
       RESULT DATA(positions).
 
-    " Check if instruments exist
-    SELECT FROM ztrmfinins
+    " Check if instruments exist - using the correct table name ZTRMINST
+    SELECT FROM ztrminst
       FIELDS instrument_id
       FOR ALL ENTRIES IN @positions
       WHERE instrument_id = @positions-InstrumentID
@@ -82,51 +85,48 @@ CLASS lhc_Position IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD validateCashflowAmount.
-    " Read the cashflow data
+    " Read the cashflow data directly
     READ ENTITIES OF zkkr_i_position IN LOCAL MODE
-      ENTITY Position BY \_Cashflow
+      ENTITY Cashflow
         FIELDS ( Amount Currency ) WITH CORRESPONDING #( keys )
       RESULT DATA(cashflows).
 
     LOOP AT cashflows INTO DATA(cashflow).
-      " Check if amount is positive
       IF cashflow-Amount <= 0.
-        APPEND VALUE #( %tky = cashflow-%tky ) TO failed-position.
+        APPEND VALUE #( %tky = cashflow-%tky ) TO failed-cashflow.
         APPEND VALUE #( %tky = cashflow-%tky
                        %msg = new_message_with_text(
                          severity = if_abap_behv_message=>severity-error
                          text     = 'Amount must be greater than zero' )
-                       %element-Amount = if_abap_behv=>mk-on ) TO reported-position.
+                       %element-Amount = if_abap_behv=>mk-on ) TO reported-cashflow.
       ENDIF.
 
-      " Check if currency is filled
       IF cashflow-Currency IS INITIAL.
-        APPEND VALUE #( %tky = cashflow-%tky ) TO failed-position.
+        APPEND VALUE #( %tky = cashflow-%tky ) TO failed-cashflow.
         APPEND VALUE #( %tky = cashflow-%tky
                        %msg = new_message_with_text(
                          severity = if_abap_behv_message=>severity-error
                          text     = 'Currency is mandatory' )
-                       %element-Currency = if_abap_behv=>mk-on ) TO reported-position.
+                       %element-Currency = if_abap_behv=>mk-on ) TO reported-cashflow.
       ENDIF.
     ENDLOOP.
   ENDMETHOD.
 
   METHOD validateCashflowDate.
-    " Read the cashflow data
+    " Read the cashflow data directly using the association
     READ ENTITIES OF zkkr_i_position IN LOCAL MODE
-      ENTITY Position BY \_Cashflow
+      ENTITY Cashflow
         FIELDS ( ValueDate ) WITH CORRESPONDING #( keys )
       RESULT DATA(cashflows).
 
     LOOP AT cashflows INTO DATA(cashflow).
-      " Check if value date is filled
       IF cashflow-ValueDate IS INITIAL.
-        APPEND VALUE #( %tky = cashflow-%tky ) TO failed-position.
+        APPEND VALUE #( %tky = cashflow-%tky ) TO failed-cashflow.  " Changed to failed-cashflow
         APPEND VALUE #( %tky = cashflow-%tky
                        %msg = new_message_with_text(
                          severity = if_abap_behv_message=>severity-error
                          text     = 'Value date is mandatory' )
-                       %element-ValueDate = if_abap_behv=>mk-on ) TO reported-position.
+                       %element-ValueDate = if_abap_behv=>mk-on ) TO reported-cashflow.  " Changed to reported-cashflow
       ENDIF.
     ENDLOOP.
   ENDMETHOD.
@@ -139,38 +139,102 @@ CLASS lhc_Position IMPLEMENTATION.
       RESULT DATA(positions).
 
     " Get last used position number
-    SELECT SINGLE FROM ztrmpos
+    SELECT SINGLE
+      FROM ztrmpos
       FIELDS MAX( position_id ) AS last_id
       INTO @DATA(last_position_id).
 
-    " Process positions without ID
-    LOOP AT positions INTO DATA(position) WHERE PositionID IS INITIAL.
-      " Generate new position ID
-      DATA(new_position_id) = CONV string( last_position_id + 1 ).
-      new_position_id = |POS{ new_position_id ALIGN = RIGHT PAD = '0' WIDTH = 10 }|.
+    " Handle initial value
+    IF last_position_id IS INITIAL.
+      last_position_id = 0.
+    ENDIF.
 
-      " Update position
-      MODIFY ENTITIES OF zkkr_i_position IN LOCAL MODE
-        ENTITY Position
-          UPDATE FIELDS ( PositionID )
-          WITH VALUE #( ( %tky = position-%tky
-                         PositionID = new_position_id ) ).
-
-      last_position_id = last_position_id + 1.
-    ENDLOOP.
-  ENDMETHOD.
-
-  METHOD get_instance_features.
-    " Read the position data
+    " Read positions that need ID assignment
     READ ENTITIES OF zkkr_i_position IN LOCAL MODE
       ENTITY Position
-        FIELDS ( PositionID ) WITH CORRESPONDING #( keys )
-      RESULT DATA(positions).
+        FIELDS ( PositionID )
+        WITH CORRESPONDING #( keys )
+        RESULT DATA(positions_to_update)
+        FAILED DATA(read_failed).
 
-    " Set features per instance
-    result = VALUE #( FOR position IN positions
-                     ( %tky = position-%tky
-                       %field-PositionID = if_abap_behv=>fc-f-read_only ) ).
+    DATA updates TYPE TABLE FOR UPDATE zkkr_i_position\\Position.
+
+    " Process positions without ID
+    LOOP AT positions_to_update REFERENCE INTO DATA(position_ref).
+      IF position_ref->PositionID IS NOT INITIAL.
+        CONTINUE.
+      ENDIF.
+
+      " Generate new position ID
+      last_position_id += 1.
+      DATA(new_position_id) = |POS{ last_position_id ALIGN = RIGHT PAD = '0' WIDTH = 10 }|.
+
+      " Collect updates
+      APPEND VALUE #( %tky = position_ref->%tky
+                     PositionID = new_position_id ) TO updates.
+    ENDLOOP.
+
+    " Update positions
+    MODIFY ENTITIES OF zkkr_i_position IN LOCAL MODE
+      ENTITY Position UPDATE FROM updates.
+  ENDMETHOD.
+
+  METHOD calculateCashflowID.
+    " Read the cashflow data
+    READ ENTITIES OF zkkr_i_position IN LOCAL MODE
+      ENTITY Cashflow
+        FIELDS ( CashflowID ) WITH CORRESPONDING #( keys )
+      RESULT DATA(cashflows).
+
+    " Get last used cashflow number
+    SELECT SINGLE
+      FROM ztrmcf
+      FIELDS MAX( cashflow_id ) AS last_id
+      INTO @DATA(last_cashflow_id).
+
+    " Handle initial value
+    IF last_cashflow_id IS INITIAL.
+      last_cashflow_id = 0.
+    ENDIF.
+
+    " Read cashflows that need ID assignment
+    READ ENTITIES OF zkkr_i_position IN LOCAL MODE
+      ENTITY Cashflow
+        FIELDS ( CashflowID )
+        WITH CORRESPONDING #( keys )
+        RESULT DATA(cashflows_to_update)
+        FAILED DATA(read_failed).
+
+    DATA updates TYPE TABLE FOR UPDATE zkkr_i_position\\Cashflow.
+
+    " Process cashflows without ID
+    LOOP AT cashflows_to_update REFERENCE INTO DATA(cashflow_ref).
+      IF cashflow_ref->CashflowID IS NOT INITIAL.
+        CONTINUE.
+      ENDIF.
+
+      " Generate new cashflow ID
+      last_cashflow_id += 1.
+      DATA(new_cashflow_id) = |CF{ last_cashflow_id ALIGN = RIGHT PAD = '0' WIDTH = 10 }|.
+
+      " Collect updates
+      APPEND VALUE #( %tky = cashflow_ref->%tky
+                     CashflowID = new_cashflow_id ) TO updates.
+    ENDLOOP.
+
+    " Update cashflows
+    MODIFY ENTITIES OF zkkr_i_position IN LOCAL MODE
+      ENTITY Cashflow UPDATE FROM updates.
+  ENDMETHOD.
+
+  METHOD get_instance_authorizations.
+    " Set default authorizations
+    LOOP AT keys ASSIGNING FIELD-SYMBOL(<key>).
+      APPEND VALUE #( %tky = <key>-%tky
+                     %update = if_abap_behv=>auth-allowed
+                     %delete = if_abap_behv=>auth-allowed
+                     %action-Edit = if_abap_behv=>auth-allowed ) TO result.
+    ENDLOOP.
   ENDMETHOD.
 
 ENDCLASS.

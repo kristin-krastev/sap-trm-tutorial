@@ -31,9 +31,23 @@ CLASS ltcl_position DEFINITION FINAL FOR TESTING
       test_validate_cf_amount_negative FOR TESTING RAISING cx_static_check,
       test_validate_cf_date_success FOR TESTING RAISING cx_static_check,
       test_validate_cf_date_missing FOR TESTING RAISING cx_static_check,
+      test_validate_cf_currency FOR TESTING RAISING cx_static_check,
 
-      " Test method for Position ID determination
-      test_calculate_position_id FOR TESTING RAISING cx_static_check.
+      " Test methods for ID determinations
+      test_calculate_position_id FOR TESTING RAISING cx_static_check,
+      test_calculate_cashflow_id FOR TESTING RAISING cx_static_check,
+
+      " Test methods for draft handling
+      test_create_draft FOR TESTING RAISING cx_static_check,
+      test_activate_draft FOR TESTING RAISING cx_static_check,
+      test_discard_draft FOR TESTING RAISING cx_static_check,
+
+      " Test methods for associations
+      test_create_position_with_cashflow FOR TESTING RAISING cx_static_check,
+      test_add_cashflow_to_position FOR TESTING RAISING cx_static_check,
+
+      " Test methods for authorization
+      test_position_authorization FOR TESTING RAISING cx_static_check.
 
 ENDCLASS.
 
@@ -44,7 +58,7 @@ CLASS ltcl_position IMPLEMENTATION.
     sql_environment = cl_osql_test_environment=>create(
         i_dependency_list = VALUE #( ( 'ZTRMPOS' )
                                    ( 'ZTRMCF' )
-                                   ( 'ZTRMFININS' ) ) ).
+                                   ( 'ZTRMINST' ) ) ).
 
     " Create test doubles for RAP business objects
     environment = cl_abap_testdouble=>create_test_environment(
@@ -270,6 +284,30 @@ CLASS ltcl_position IMPLEMENTATION.
     cl_abap_unit_assert=>assert_not_initial( reported ).
   ENDMETHOD.
 
+  METHOD test_validate_cf_currency.
+    " Prepare test cashflow without currency
+    MODIFY ENTITIES OF zkkr_i_position
+      ENTITY Position
+        CREATE
+        WITH VALUE #( ( %cid = 'TEST_POS_01' ) )
+      ENTITY Position\_Cashflow
+        CREATE
+        WITH VALUE #( ( %cid_ref = 'TEST_POS_01'
+                       %target = VALUE #( ( %cid = 'TEST_CF_01'
+                                          Amount = '1000.00'
+                                          Currency = '' ) ) ) ).
+
+    " Execute validation
+    COMMIT ENTITIES
+      RESPONSE OF zkkr_i_position
+        FAILED DATA(failed)
+        REPORTED DATA(reported).
+
+    " Verify result
+    cl_abap_unit_assert=>assert_not_initial( failed ).
+    cl_abap_unit_assert=>assert_not_initial( reported ).
+  ENDMETHOD.
+
   METHOD test_calculate_position_id.
     " Prepare test data
     sql_environment->insert_test_data(
@@ -301,6 +339,217 @@ CLASS ltcl_position IMPLEMENTATION.
     cl_abap_unit_assert=>assert_equals(
       act = positions[ 1 ]-PositionID
       exp = 'POS0000002' ).
+  ENDMETHOD.
+
+  METHOD test_calculate_cashflow_id.
+    " Prepare test data
+    sql_environment->insert_test_data(
+      EXPORTING
+        i_data = VALUE ztrmcf_tab( ( cashflow_id = 'CF0000001' ) ) ).
+
+    " Prepare test position with cashflow
+    MODIFY ENTITIES OF zkkr_i_position
+      ENTITY Position
+        CREATE
+        WITH VALUE #( ( %cid = 'TEST_POS_01' ) )
+      ENTITY Position\_Cashflow
+        CREATE
+        WITH VALUE #( ( %cid_ref = 'TEST_POS_01'
+                       %target = VALUE #( ( %cid = 'TEST_CF_01'
+                                          Amount = '1000.00'
+                                          Currency = 'EUR'
+                                          ValueDate = sy-datum ) ) ) ).
+
+    " Execute determination
+    COMMIT ENTITIES
+      RESPONSE OF zkkr_i_position
+        FAILED DATA(failed)
+        REPORTED DATA(reported).
+
+    " Read created cashflow
+    READ ENTITIES OF zkkr_i_position
+      ENTITY Cashflow
+        FIELDS ( CashflowID )
+        WITH VALUE #( ( %cid = 'TEST_CF_01' ) )
+      RESULT DATA(cashflows).
+
+    " Verify result
+    cl_abap_unit_assert=>assert_initial( failed ).
+    cl_abap_unit_assert=>assert_initial( reported ).
+    cl_abap_unit_assert=>assert_equals(
+      act = cashflows[ 1 ]-CashflowID
+      exp = 'CF0000002' ).
+  ENDMETHOD.
+
+  METHOD test_create_draft.
+    " Create draft position
+    MODIFY ENTITIES OF zkkr_i_position
+      ENTITY Position
+        CREATE
+        WITH VALUE #( ( %cid = 'TEST_POS_01'
+                       InstrumentID = 'INST001'
+                       ValidFrom = sy-datum
+                       ValidTo = sy-datum + 365 ) )
+        CREATE BY \_Cashflow
+        WITH VALUE #( ( %cid_ref = 'TEST_POS_01'
+                       %target = VALUE #( ( %cid = 'TEST_CF_01'
+                                          Amount = '1000.00'
+                                          Currency = 'EUR'
+                                          ValueDate = sy-datum ) ) ) ).
+
+    " Execute draft creation
+    COMMIT ENTITIES
+      RESPONSE OF zkkr_i_position
+        FAILED DATA(failed)
+        REPORTED DATA(reported).
+
+    " Verify result
+    cl_abap_unit_assert=>assert_initial( failed ).
+    cl_abap_unit_assert=>assert_initial( reported ).
+  ENDMETHOD.
+
+  METHOD test_activate_draft.
+    " Create and activate draft
+    MODIFY ENTITIES OF zkkr_i_position
+      ENTITY Position
+        EXECUTE Edit
+        WITH VALUE #( ( %cid = 'TEST_POS_01' ) )
+        EXECUTE Activate
+        WITH VALUE #( ( %cid = 'TEST_POS_01' ) ).
+
+    " Execute activation
+    COMMIT ENTITIES
+      RESPONSE OF zkkr_i_position
+        FAILED DATA(failed)
+        REPORTED DATA(reported).
+
+    " Verify result
+    cl_abap_unit_assert=>assert_initial( failed ).
+    cl_abap_unit_assert=>assert_initial( reported ).
+  ENDMETHOD.
+
+  METHOD test_discard_draft.
+    " Create and discard draft
+    MODIFY ENTITIES OF zkkr_i_position
+      ENTITY Position
+        EXECUTE Edit
+        WITH VALUE #( ( %cid = 'TEST_POS_01' ) )
+        EXECUTE Discard
+        WITH VALUE #( ( %cid = 'TEST_POS_01' ) ).
+
+    " Execute discard
+    COMMIT ENTITIES
+      RESPONSE OF zkkr_i_position
+        FAILED DATA(failed)
+        REPORTED DATA(reported).
+
+    " Verify result
+    cl_abap_unit_assert=>assert_initial( failed ).
+    cl_abap_unit_assert=>assert_initial( reported ).
+  ENDMETHOD.
+
+  METHOD test_create_position_with_cashflow.
+    " Create position with cashflow
+    MODIFY ENTITIES OF zkkr_i_position
+      ENTITY Position
+        CREATE
+        WITH VALUE #( ( %cid = 'TEST_POS_01'
+                       InstrumentID = 'INST001'
+                       ValidFrom = sy-datum
+                       ValidTo = sy-datum + 365 ) )
+        CREATE BY \_Cashflow
+        WITH VALUE #( ( %cid_ref = 'TEST_POS_01'
+                       %target = VALUE #( ( %cid = 'TEST_CF_01'
+                                          Amount = '1000.00'
+                                          Currency = 'EUR'
+                                          ValueDate = sy-datum ) ) ) ).
+
+    " Execute creation
+    COMMIT ENTITIES
+      RESPONSE OF zkkr_i_position
+        FAILED DATA(failed)
+        REPORTED DATA(reported).
+
+    " Read created position with cashflow
+    READ ENTITIES OF zkkr_i_position
+      ENTITY Position
+        BY \_Cashflow
+        WITH VALUE #( ( %cid = 'TEST_POS_01' ) )
+      RESULT DATA(cashflows).
+
+    " Verify result
+    cl_abap_unit_assert=>assert_initial( failed ).
+    cl_abap_unit_assert=>assert_initial( reported ).
+    cl_abap_unit_assert=>assert_equals(
+      act = lines( cashflows )
+      exp = 1 ).
+  ENDMETHOD.
+
+  METHOD test_add_cashflow_to_position.
+    " Create position first
+    MODIFY ENTITIES OF zkkr_i_position
+      ENTITY Position
+        CREATE
+        WITH VALUE #( ( %cid = 'TEST_POS_01'
+                       InstrumentID = 'INST001'
+                       ValidFrom = sy-datum
+                       ValidTo = sy-datum + 365 ) ).
+
+    " Add cashflow to existing position
+    MODIFY ENTITIES OF zkkr_i_position
+      ENTITY Position\_Cashflow
+        CREATE
+        WITH VALUE #( ( %cid_ref = 'TEST_POS_01'
+                       %target = VALUE #( ( %cid = 'TEST_CF_01'
+                                          Amount = '1000.00'
+                                          Currency = 'EUR'
+                                          ValueDate = sy-datum ) ) ) ).
+
+    " Execute creation
+    COMMIT ENTITIES
+      RESPONSE OF zkkr_i_position
+        FAILED DATA(failed)
+        REPORTED DATA(reported).
+
+    " Read position with cashflow
+    READ ENTITIES OF zkkr_i_position
+      ENTITY Position
+        BY \_Cashflow
+        WITH VALUE #( ( %cid = 'TEST_POS_01' ) )
+      RESULT DATA(cashflows).
+
+    " Verify result
+    cl_abap_unit_assert=>assert_initial( failed ).
+    cl_abap_unit_assert=>assert_initial( reported ).
+    cl_abap_unit_assert=>assert_equals(
+      act = lines( cashflows )
+      exp = 1 ).
+  ENDMETHOD.
+
+  METHOD test_position_authorization.
+    " Create test position
+    MODIFY ENTITIES OF zkkr_i_position
+      ENTITY Position
+        CREATE
+        WITH VALUE #( ( %cid = 'TEST_POS_01'
+                       InstrumentID = 'INST001'
+                       ValidFrom = sy-datum
+                       ValidTo = sy-datum + 365 ) ).
+
+    " Check authorizations
+    READ ENTITIES OF zkkr_i_position
+      ENTITY Position
+        ALL FIELDS WITH VALUE #( ( %cid = 'TEST_POS_01' ) )
+      RESULT DATA(positions)
+      FAILED DATA(failed)
+      REPORTED DATA(reported).
+
+    " Verify result
+    cl_abap_unit_assert=>assert_initial( failed ).
+    cl_abap_unit_assert=>assert_initial( reported ).
+    cl_abap_unit_assert=>assert_equals(
+      act = lines( positions )
+      exp = 1 ).
   ENDMETHOD.
 
 ENDCLASS.
