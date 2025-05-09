@@ -6,28 +6,28 @@
 
 define view ZKKR_R_POSITION
   as select from ztrmpos as Position
-  association [0..*] to ZKKR_R_CASHFLOW   as _Cashflow   on $projection.PositionID = _Cashflow.PositionID
-  association [1..1] to ZKKR_R_INSTRUMENT as _Instrument on $projection.InstrumentID = _Instrument.InstrumentID
+  association [0..*] to ZKKR_R_CASHFLOW   as _Cashflow   on $projection.position_id = _Cashflow.position_id
+  association [1..1] to ZKKR_R_INSTRUMENT as _Instrument on $projection.instrument_id = _Instrument.instrument_id
 {
-  key position_id    as PositionID,
-      position_descr as PositionDescription,
+  key position_id,
+      position_descr,
       @ObjectModel.foreignKey.association: '_Instrument'
-      instrument_id  as InstrumentID,
-      @Semantics.amount.currencyCode: 'Currency'
-      position_amount as Amount,
-      currency       as Currency,
+      instrument_id,
+      @Semantics.amount.currencyCode: 'currency'
+      position_amount,
+      currency,
       @Semantics.businessDate.from: true
-      valid_from     as ValidFrom,
+      valid_from,
       @Semantics.businessDate.to: true
-      valid_to       as ValidTo,
+      valid_to,
       @Semantics.user.createdBy: true
-      created_by     as CreatedBy,
+      created_by,
       @Semantics.systemDateTime.createdAt: true
-      created_at     as CreatedAt,
+      created_at,
       @Semantics.user.lastChangedBy: true
-      changed_by     as ChangedBy,
+      changed_by,
       @Semantics.systemDateTime.lastChangedAt: true
-      changed_at     as ChangedAt,
+      changed_at,
 
       // Associations
       _Cashflow,

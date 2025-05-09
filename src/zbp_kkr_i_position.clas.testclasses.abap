@@ -5,7 +5,7 @@ CLASS ltcl_position DEFINITION FINAL FOR TESTING
 
   PRIVATE SECTION.
     CLASS-DATA:
-      environment TYPE REF TO if_abap_behavior_test_environment,
+      environment TYPE REF TO cl_abap_behavior_test_environment,
       sql_environment TYPE REF TO if_osql_test_environment.
 
     CLASS-METHODS:
@@ -61,7 +61,7 @@ CLASS ltcl_position IMPLEMENTATION.
                                    ( 'ZTRMINST' ) ) ).
 
     " Create test doubles for RAP business objects
-    environment = cl_abap_testdouble=>create_test_environment(
+    environment = cl_abap_behavior_test_environment=>create(
         i_for_behavior_of = 'ZKKR_I_POSITION' ).
   ENDMETHOD.
 
