@@ -1,0 +1,38 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Check file structure
+      run: |
+        test -d src || (echo "src directory missing" && exit 1)
+        test -d tests || (echo "tests directory missing" && exit 1)
+        test -f README.md || (echo "README.md missing" && exit 1)
+        test -f LICENSE || (echo "LICENSE missing" && exit 1)
+
+    - name: Validate documentation
+      run: |
+        test -f rap-rules.md || (echo "rap-rules.md missing" && exit 1)
+        grep "## Test Class Structure" rap-rules.md || (echo "Test class documentation missing" && exit 1)
+
+  security:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Run security scan
+      uses: github/codeql-action/init@v2
+      with:
+        languages: abap
+
+    - name: Perform CodeQL Analysis
+      uses: github/codeql-action/analyze@v2
