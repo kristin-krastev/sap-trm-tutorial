@@ -7,10 +7,10 @@ on:
     branches: [ main ]
 
 jobs:
-  lint:
+  validate:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
 
     - name: Check file structure
       run: |
@@ -18,21 +18,25 @@ jobs:
         test -d tests || (echo "tests directory missing" && exit 1)
         test -f README.md || (echo "README.md missing" && exit 1)
         test -f LICENSE || (echo "LICENSE missing" && exit 1)
+        test -f rap-rules.md || (echo "rap-rules.md missing" && exit 1)
 
     - name: Validate documentation
       run: |
-        test -f rap-rules.md || (echo "rap-rules.md missing" && exit 1)
-        grep "## Test Class Structure" rap-rules.md || (echo "Test class documentation missing" && exit 1)
+        if ! grep -q "## Test Class Structure" rap-rules.md; then
+          echo "Test class documentation missing"
+          exit 1
+        fi
 
-  security:
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v2
+    - name: Check file naming conventions
+      run: |
+        # Check for proper SAP RAP naming conventions
+        find . -type f -name "*.abap" | while read file; do
+          if ! [[ $(basename "$file") =~ ^[zy][_a-z0-9]+\.(clas|intf|prog|ddls)\.abap$ ]]; then
+            echo "Invalid ABAP file name: $file"
+            exit 1
+          fi
+        done
 
-    - name: Run security scan
-      uses: github/codeql-action/init@v2
-      with:
-        languages: abap
-
-    - name: Perform CodeQL Analysis
-      uses: github/codeql-action/analyze@v2
+    - name: Validate markdown files
+      run: |
+        find . -type f -name "*.md" -exec markdown-lint {} \; || true

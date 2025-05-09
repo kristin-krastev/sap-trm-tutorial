@@ -1,1 +1,45 @@
+# SAP RAP specific
+*.abap.mshc
+*.abap.sig
+*.abap.xml
+*.slnk
+*.sush2
+*.$*.*
+
+# Temporary files
+*.bak
+*.tmp
+~*
+
+# IDE specific
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Build outputs
+*.exe
+*.dll
+*.so
+*.dylib
+
+# Logs and databases
+*.log
+*.sql
+*.sqlite
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# SAP specific
+.abapcov/
+.abapgit/
+*.abapgit
+
 node_modules/\n.DS_Store\n*.log\ndist/\n.env

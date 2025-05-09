@@ -1,84 +1,56 @@
-# SAP Treasury & Risk Management Learning Project
+# SAP Treasury and Risk Management (TRM) Tutorial
 
-This repository documents my learning journey in SAP Treasury & Risk Management (TRM) and Commodity Risk Management, focusing on the technical implementation aspects from an ABAP developer's perspective.
+This repository contains example code and documentation for SAP Treasury and Risk Management (TRM) development using the ABAP RESTful Application Programming Model (RAP).
 
 ## Project Structure
 
-- `src/`: Source code examples and implementations
-- `docs/`: Documentation and learning materials
-- `tests/`: Test cases and scenarios
-- `examples/`: Example configurations and use cases
+- `src/` - Source code for the TRM position monitor
+- `tests/` - Test classes and test data
+- `docs/` - Documentation and development guidelines
 
-## Learning Path
+## Features
 
-### Phase 1: Technical Foundation
-#### SAP Treasury Technical Architecture
-- Understanding the technical structure of SAP Treasury & Risk Management module
-- Integration points with other SAP modules
-- Key tables and data structures
-- Common interfaces and APIs
+- Position Monitor implementation
+- Validation rules for positions and cashflows
+- Test classes with proper test data setup
+- RAP development guidelines and best practices
 
-#### Development Patterns in Treasury
-- Common ABAP patterns used in Treasury applications
-- Specific CDS views for Treasury data
-- Treasury-specific RAP implementations
-- OData services in Treasury context
+## Development Guidelines
 
-### Phase 2: Basic Treasury Operations
-#### Core Treasury Data Structures
-- Financial instruments master data
-- Business partner data in Treasury
-- Bank master data
-- Transaction data structures
+The project follows SAP RAP development guidelines. See [rap-rules.md](rap-rules.md) for detailed development rules including:
 
-#### Basic Treasury Processes
-- Cash management flow
-- Payment processing
-- Bank statement processing
-- Basic reporting requirements
+- Naming conventions
+- Required features
+- CDS view patterns
+- Behavior definitions
+- UI annotations
+- Testing guidelines
 
-### Phase 3: Risk Management Fundamentals
-#### Basic Risk Concepts
-- Types of financial risks
-- Risk measurement basics
-- Position management
-- Simple exposure calculations
+## Test Classes
 
-#### Technical Implementation of Risk Management
-- Risk-related data structures
-- Risk calculation implementations
-- Position management tables
-- Risk reporting tools
+The project includes comprehensive test classes demonstrating:
 
-### Phase 4: Commodity Trading Basics
-#### Commodity Trading Fundamentals
-- Physical vs. financial trades
-- Basic trading processes
-- Price and quantity management
-- Settlement processes
-
-#### Technical Aspects of Commodity Trading
-- Commodity master data
-- Price and quantity calculations
-- Integration with trading platforms
-- Commodity-specific reporting
-
-#### Performance Optimization for Large Volume Treasury Operations
-- Database optimization techniques for large position tables
-- Memory management for complex Treasury calculations
-- Parallel processing strategies for mass position updates
-- Performance monitoring and analysis tools
-- Optimization patterns for high-frequency trading scenarios
-- Caching strategies for frequently accessed Treasury data
-
-## Version Control
-
-This repository uses Git for version control. Each significant learning milestone or implementation example will be committed with descriptive messages to track progress.
+- Test environment setup using `if_osql_test_environment`
+- Test data preparation
+- Validation testing
+- Error scenario testing
+- RAP-specific testing patterns
 
 ## Getting Started
 
-The learning path begins with understanding the technical architecture of SAP Treasury and its integration points. Each phase will include both theoretical knowledge and practical implementations.
+1. Clone the repository
+2. Import the source code into your SAP system
+3. Run the test classes to verify the setup
+4. Review the documentation in `docs/` for development guidelines
+
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Commit your changes
+4. Push to the branch
+5. Create a Pull Request
 
 ## License
 
-This project is for educational purposes only. All SAP-related content respects SAP's intellectual property rights.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
