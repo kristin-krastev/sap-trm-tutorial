@@ -1,6 +1,8 @@
 # SAP RAP Development Rules and Best Practices
 
 ## Test Class Structure
+
+### Basic Test Class Template
 ```abap
 CLASS ltcl_<entity> DEFINITION FINAL FOR TESTING
   DURATION SHORT
@@ -59,8 +61,6 @@ METHOD class_teardown.
   sql_environment->destroy( ).
   environment->destroy( ).
 ENDMETHOD.
-
-## Testing Parent-Child Entity Relationships
 
 ### Parent-Child Test Pattern
 ```abap
