@@ -30,7 +30,8 @@ CLASS ltcl_position DEFINITION FINAL FOR TESTING
       test_cf_amt_val FOR TESTING RAISING cx_static_check,
       test_position_validation FOR TESTING RAISING cx_static_check,
       test_invalid_dates FOR TESTING RAISING cx_static_check,
-      test_instrument_validation FOR TESTING RAISING cx_static_check.
+      test_instrument_validation FOR TESTING RAISING cx_static_check,
+      test_cf_date_val FOR TESTING RAISING cx_static_check.
 
 ENDCLASS.
 
@@ -648,6 +649,71 @@ CLASS ltcl_position IMPLEMENTATION.
             msg = 'Error should be reported on InstrumentID element' ).
       ENDIF.
     ENDIF.
+  ENDMETHOD.
+
+  METHOD test_cf_date_val.
+    " Given
+    DATA: failed   TYPE RESPONSE FOR FAILED LATE zkkr_i_position,
+          reported TYPE RESPONSE FOR REPORTED LATE zkkr_i_position.
+
+    " First create a position without PositionID (it's read-only)
+    MODIFY ENTITIES OF zkkr_i_position
+      ENTITY Position
+        CREATE FIELDS ( InstrumentID ValidFrom )
+        WITH VALUE #( ( %cid = 'POS1'
+                       InstrumentID = 'INST01'
+                       ValidFrom = cl_abap_context_info=>get_system_date( ) ) )
+      MAPPED DATA(mapped_pos)
+      FAILED DATA(failed_pos)
+      REPORTED DATA(reported_pos).
+
+    " Ensure position was created successfully
+    cl_abap_unit_assert=>assert_initial(
+      act = failed_pos
+      msg = 'Position creation should succeed' ).
+
+    " Test Case 1: Valid future date
+    DATA(future_date) = cl_abap_context_info=>get_system_date( ) + 1.
+
+    MODIFY ENTITIES OF zkkr_i_position
+      ENTITY Position
+        CREATE BY \_Cashflow
+        FIELDS ( ValueDate )
+        WITH VALUE #(
+          ( %tky = mapped_pos-position[ 1 ]-%tky
+            %target = VALUE #(
+              ( %cid = 'CF1'
+                ValueDate = future_date ) ) ) )
+      MAPPED DATA(mapped_cf)
+      FAILED DATA(failed_cf)
+      REPORTED DATA(reported_cf).
+
+    " Then - Valid case
+    cl_abap_unit_assert=>assert_initial(
+      act = failed_cf-cashflow
+      msg = 'Validation should pass for future date' ).
+
+    " Test Case 2: Invalid past date
+    DATA(past_date) = cl_abap_context_info=>get_system_date( ) - 1.
+
+    MODIFY ENTITIES OF zkkr_i_position
+      ENTITY Position
+        CREATE BY \_Cashflow
+        FIELDS ( ValueDate )
+        WITH VALUE #(
+          ( %tky = mapped_pos-position[ 1 ]-%tky
+            %target = VALUE #(
+              ( %cid = 'CF2'
+                ValueDate = past_date ) ) ) )
+      MAPPED DATA(mapped_cf2)
+      FAILED DATA(failed_cf2)
+      REPORTED DATA(reported_cf2).
+
+    " Then - Past date should fail
+    cl_abap_unit_assert=>assert_not_initial(
+      act = failed_cf2-cashflow
+      msg = 'Validation should fail for past date' ).
+
   ENDMETHOD.
 
 ENDCLASS.
