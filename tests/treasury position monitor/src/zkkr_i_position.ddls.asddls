@@ -22,7 +22,7 @@
 
 define view ZKKR_I_POSITION
   as select from ZKKR_R_POSITION as Position
-  composition [0..*] of ZKKR_I_CASHFLOW   as _Cashflow
+  composition [0..*] of ZKKR_I_CASHFLOW as _Cashflow
   association [1..1] to ZKKR_I_INSTRUMENT as _Instrument on $projection.instrument_id = _Instrument.instrument_id
 {
       @UI.facet: [
