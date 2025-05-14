@@ -12,36 +12,23 @@ jobs:
     steps:
     - uses: actions/checkout@v3
 
-    - name: Check file structure
+    - name: Check repository structure
       run: |
         test -d src || (echo "src directory missing" && exit 1)
         test -d tests || (echo "tests directory missing" && exit 1)
         test -f README.md || (echo "README.md missing" && exit 1)
         test -f LICENSE || (echo "LICENSE missing" && exit 1)
-        test -f rap-rules.md || (echo "rap-rules.md missing" && exit 1)
 
     - name: Validate documentation
       run: |
-        if ! grep -q "## Test Class Structure" rap-rules.md; then
+        if ! grep -q "^## Test Class Structure" rap-rules.md; then
           echo "Test class documentation missing"
           exit 1
         fi
 
-    - name: Check file naming conventions
-      run: |
-        # Check ABAP files follow SAP naming conventions
-        find . -type f -name "*.abap" | while read file; do
-          basename=$(basename "$file")
-          # Allow standard SAP ABAP file patterns
-          if [[ ! $basename =~ ^z[a-z0-9_]+\.(clas|intf|prog|ddls|dcls|bdef|behavior|testclasses)\.abap$ ]] && \
-             [[ ! $basename =~ ^y[a-z0-9_]+\.(clas|intf|prog|ddls|dcls|bdef|behavior|testclasses)\.abap$ ]]; then
-            echo "Warning: File $file might not follow SAP naming conventions"
-          fi
-        done
-
     - name: Validate markdown files
       run: |
-        find . -type f -name "*.md" | while read file; do
+        find . -type f -name "*.md" -print0 | while IFS= read -r -d '' file; do
           if ! grep -q "^#" "$file"; then
             echo "Warning: Markdown file $file missing header"
           fi
