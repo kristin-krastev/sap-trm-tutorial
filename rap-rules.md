@@ -1,5 +1,65 @@
 # SAP RAP Development Rules and Best Practices
 
+## Test Class Structure
+```abap
+CLASS ltcl_<entity> DEFINITION FINAL FOR TESTING
+  DURATION SHORT
+  RISK LEVEL HARMLESS.
+
+  PRIVATE SECTION.
+    CLASS-DATA:
+      environment TYPE REF TO if_abap_behavior_test_environment,
+      sql_environment TYPE REF TO if_osql_test_environment.
+
+    DATA:
+      cut TYPE REF TO lhc_<entity>.  "Class Under Test
+
+    CLASS-METHODS:
+      class_setup,    "Setup test environment once for all tests
+      class_teardown. "Cleanup after all tests
+
+    METHODS:
+      setup,         "Setup before each test method
+      teardown,      "Cleanup after each test method
+      test_method1 FOR TESTING RAISING cx_static_check,
+      test_method2 FOR TESTING RAISING cx_static_check.
+```
+
+### Test Environment Setup
+```abap
+METHOD class_setup.
+  " Create test doubles for database tables
+  sql_environment = cl_osql_test_environment=>create(
+    i_dependency_list = VALUE #(
+      ( 'ZTABLE1' )
+      ( 'ZTABLE2' )
+    )
+  ).
+
+  " Create behavior test environment
+  environment = cl_abap_behavior_test_environment=>create(
+    EXPORTING
+      entity_type_name = 'ZI_ENTITY'
+  ).
+ENDMETHOD.
+
+METHOD setup.
+  " Clear test data before each test
+  sql_environment->clear_doubles( ).
+  environment->clear_doubles( ).
+ENDMETHOD.
+
+METHOD teardown.
+  " Cleanup after each test
+  ROLLBACK ENTITIES.
+ENDMETHOD.
+
+METHOD class_teardown.
+  " Final cleanup
+  sql_environment->destroy( ).
+  environment->destroy( ).
+ENDMETHOD.
+
 ## Testing Parent-Child Entity Relationships
 
 ### Parent-Child Test Pattern
