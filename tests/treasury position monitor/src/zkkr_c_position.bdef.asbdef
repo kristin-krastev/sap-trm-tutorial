@@ -1,0 +1,28 @@
+projection;
+strict ( 2 );
+use draft;
+
+define behavior for ZKKR_C_POSITION alias Position
+use etag
+{
+  use create;
+  use update;
+  use delete;
+
+  use action Edit;
+  use action Activate;
+  use action Discard;
+  use action Resume;
+  use action Prepare;
+
+  use association _Cashflow { create; with draft; }
+}
+
+define behavior for ZKKR_C_CASHFLOW alias Cashflow
+use etag
+{
+  use update;
+  use delete;
+
+  use association _Position { with draft; }
+}

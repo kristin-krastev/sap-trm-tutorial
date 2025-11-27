@@ -83,6 +83,13 @@ define view ZKKR_I_POSITION
       @UI.hidden: true
       changed_at,
 
+      // Virtual fields for criticality
+      case
+        when position_amount > 0 then 3  // Positive: Green
+        when position_amount < 0 then 1  // Negative: Red
+        else 0                           // Neutral: Grey
+      end as AmountCriticality,
+
       // Associations
       _Cashflow,
       _Instrument
