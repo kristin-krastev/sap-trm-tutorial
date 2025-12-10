@@ -28,7 +28,7 @@
 |---|-------|-------|-------|-------|-------|-------|----------|--------|
 | **1** | Table Type | 🟢 | 🟢 | 🟢 | 🟢 | 🟢 | High | ✅ Complete |
 | **2** | Column Header Menu | 🟢 | 🟢 | 🟢 | 🟢 | 🟢 | High | ✅ Complete |
-| **3** | Context Menu | 🔵 | 🔵 | 🔵 | 🔵 | 🔵 | **CURRENT** | Assessment Starting |
+| **3** | Context Menu | ⚠️ | 🔵 | 🔵 | 🔵 | 🔵 | **CURRENT** | Assessment In Progress |
 | **4** | Filter Info Bar | 🚫 | 🚫 | 🚫 | 🚫 | 🚫 | - | Skipped |
 | **5** | Table Column Width | 🟢 | 🟢 | 🟢 | 🟢 | 🟢 | Low | ✅ Complete |
 | **6** | Scroll & Selection Limit | 🚫 | 🚫 | 🚫 | 🚫 | 🚫 | - | Skipped |
@@ -169,8 +169,8 @@
 4. Actions hidden via `setVisible(false)`
 
 **Assessment Checklist:**
-- [ ] F5658 - Test context menu, review controller for violations (Priority: High - has multiple actions)
-- [ ] F5655 - Test context menu, review controller for violations
+- [ ] ⚠️ F5658 - **DEFERRED** - Uses tree table, redirects to SAP GUI (hybrid app) - Requires team discussion
+- [ ] F5655 - Test context menu, review controller for violations (**START HERE**)
 - [ ] F5659 - Test context menu, review controller for violations (Note: Draft-enabled)
 - [ ] F5665 - Test context menu, review controller for violations (Easy: only 17 rows)
 - [ ] F5666 - Test context menu, review controller for violations
