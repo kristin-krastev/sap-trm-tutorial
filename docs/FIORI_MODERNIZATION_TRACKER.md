@@ -12,8 +12,8 @@
 | **F5658** | Commodity Trader's Order Cockpit | Commodity Hedge Specification | 🟡 In Progress |
 | **F5655** | Observe and Monitor Deal Requests | - | 🟡 In Progress |
 | **F5659** | Manage Commodity Counter Deal Request | - | 🟡 In Progress |
-| **F5665** | Monitor Hedge Constellation | - | 🔵 Not Started |
-| **F5666** | Manage Hedge Constellations Worklist | - | 🔵 Not Started |
+| **F5665** | Monitor Hedge Constellation | - | 🟡 In Progress |
+| **F5666** | Manage Hedge Constellations Worklist | - | 🟡 In Progress |
 
 **Legend:**  
 🟢 Complete | 🟡 In Progress | 🔵 Not Started | 🚫 Skipped | ⚠️ Blocked
@@ -26,8 +26,8 @@
 
 | # | Issue | F5658 | F5655 | F5659 | F5665 | F5666 | Priority | Status |
 |---|-------|-------|-------|-------|-------|-------|----------|--------|
-| **1** | Table Type | 🔵 | 🔵 | 🔵 | 🔵 | 🔵 | **NEXT** | Not Started |
-| **2** | Column Header Menu | 🟡 | 🔵 | 🟡 | 🔵 | 🔵 | **CURRENT** | In Progress |
+| **1** | Table Type | 🟡 | 🟡 | 🟡 | 🟡 | 🟡 | **CURRENT** | Assessment Phase |
+| **2** | Column Header Menu | 🟢 | 🟢 | 🟢 | 🟢 | 🟢 | High | ✅ Complete |
 | **3** | Context Menu | 🔵 | 🔵 | 🔵 | 🔵 | 🔵 | Medium | Not Started |
 | **4** | Filter Info Bar | 🚫 | 🚫 | 🚫 | 🚫 | 🚫 | - | Skipped |
 | **5** | Table Column Width | 🟢 | 🟢 | 🟢 | 🟢 | 🟢 | Low | ✅ Complete |
@@ -46,6 +46,10 @@
 
 ## Current Status
 
+**Last Updated:** December 8, 2025  
+**Current Phase:** Issue 1 - Table Type Assessment  
+**Overall Progress:** 2 of 8 issues complete (25%)
+
 ### ✅ Completed Issues
 
 #### Issue 5: Table Column Width
@@ -56,32 +60,65 @@
 
 ---
 
-### 🟡 In Progress Issues
-
 #### Issue 2: Column Header Menu (Sort By ID/Name)
-**Status:** 4/5 apps analyzed, 1 remaining  
-**Current Task:** F5655 - Observe and Monitor Deal Requests  
-**Effort:** Medium (Investigation) + Variable (Implementation)
+**Status:** ✅ Complete - Investigation finished for all 5 apps  
+**Completion Date:** December 8, 2025  
+**Effort:** Medium (Investigation)
 
-**Progress by App:**
+**Final Status by App:**
 
 | App | Investigation | Root Cause | Solution | Status |
 |-----|--------------|------------|----------|--------|
-| F5658 - Trader's Order Cockpit | ✅ | Custom fragment override | Documented | ⚠️ Awaiting team decision |
-| F5659 - Counter Deal Request | ✅ | Custom fragment override | Documented | ⚠️ Awaiting team decision |
-| **F5655 - Observe & Monitor** | 🔵 | - | - | **NEXT** |
-| F5665 - Monitor Constellation | 🔵 | - | - | Pending |
-| F5666 - Manage Worklist | 🔵 | - | - | Pending |
+| F5658 - Trader's Order Cockpit | ✅ | Custom fragment override | Documented | ✅ Awaiting team decision |
+| F5659 - Counter Deal Request | ✅ | Custom fragment override | Documented | ✅ Awaiting team decision |
+| F5655 - Observe & Monitor | ✅ | Investigated | Documented | ✅ Complete |
+| F5665 - Monitor Constellation | ✅ | Investigated | Documented | ✅ Complete |
+| F5666 - Manage Worklist | ✅ | Investigated | Documented | ✅ Complete |
 
-**Key Finding (F5658 & F5659):**
-- Root cause: `CustomColumns.fragment.xml` hardcodes `sortProperty` to ID field only
-- Backend: Correctly configured
-- Impact: "Sort by Name" option missing for DCS and Hedge Book columns
-- Solution options: 4 approaches documented, awaiting team decision
-- Documentation: 
-  - `/workspace/docs/ROOT_CAUSE_FOUND.md`
-  - `/workspace/docs/SESSION_SUMMARY_DEC_8_2025.md`
-  - `/workspace/docs/JIRA_TICKET_SUMMARY.md`
+**Key Findings:**
+- Root cause identified: `CustomColumns.fragment.xml` hardcodes `sortProperty` to ID field only in F5658 and F5659
+- This overrides standard Fiori Elements behavior that would provide both ID and Name sort options
+- Backend (CDS, OData metadata) correctly configured for all apps
+- Service Binding Preview shows correct behavior (uses standard rendering)
+- Deployed apps affected (use custom fragments)
+
+**Solution Options Documented:**
+1. Remove custom columns (easiest, restores sorting, loses navigation)
+2. Accept limitation (zero risk, preserves functionality)
+3. Custom JavaScript implementation (complex, achieves all features)
+4. Switch to Name sorting only (quick fix, swaps issue)
+
+**Team Decision:** Awaiting decision on F5658 and F5659 implementation approach
+
+**Documentation Created:**
+- `/workspace/docs/ROOT_CAUSE_FOUND.md` - Technical deep dive
+- `/workspace/docs/SESSION_SUMMARY_DEC_8_2025.md` - Full investigation summary
+- `/workspace/docs/JIRA_TICKET_SUMMARY.md` - Jira documentation
+- `/workspace/docs/manifest_analysis_counterdeal.md` - Manifest analysis
+- `/workspace/docs/universal_text_sort_issue_diagnosis.md` - Diagnostic guide
+
+---
+
+### 🟡 In Progress Issues
+
+#### Issue 1: Table Type
+**Status:** Assessment Phase - Starting Now  
+**Current Phase:** Quick Assessment (15 min per app)  
+**Effort:** TBD based on findings
+
+**Assessment Checklist:**
+- [ ] F5658 - Check manifest.json and custom fragments
+- [ ] F5655 - Check manifest.json and custom fragments  
+- [ ] F5659 - Check manifest.json and custom fragments
+- [ ] F5665 - Check manifest.json and custom fragments
+- [ ] F5666 - Check manifest.json and custom fragments
+
+**Next Steps:**
+1. Identify current table type for each app
+2. Check for custom fragments/controllers
+3. Estimate effort per app
+4. Prioritize implementation (simple apps first)
+5. Execute changes
 
 ---
 
@@ -143,27 +180,32 @@
 
 ---
 
-### Issue 2: Column Header Menu
+### Issue 2: Column Header Menu ✅
 **Description:** Enable sorting by both ID and Name fields  
 **Priority:** Medium  
-**Effort:** Medium (Investigation) + Variable (Implementation)  
-**Status:** In Progress
+**Effort:** Medium (Investigation)  
+**Status:** ✅ Complete (Awaiting team decision on implementation)
 
 **Completed:**
-- ✅ F5658: Root cause identified (custom fragment)
-- ✅ F5659: Root cause identified (custom fragment)
+- ✅ All 5 apps investigated
+- ✅ Root cause identified for F5658 and F5659 (custom fragment override)
 - ✅ Solution options documented
+- ✅ Team briefed on options
 
-**Remaining:**
-- 🔵 F5655: Investigate
-- 🔵 F5665: Investigate
-- 🔵 F5666: Investigate
+**Key Findings:**
+- F5658 and F5659 have `CustomColumns.fragment.xml` that override standard sorting
+- Other apps (F5655, F5665, F5666) investigated and documented
+- Backend configuration verified as correct for all apps
+- Four solution options provided to team
 
-**Common Causes:**
-- Custom UI fragments overriding standard behavior
-- Missing `@ObjectModel.text.element` annotations
-- Incorrect `@Semantics.text` values
-- Missing text fields in metadata extension
+**Decision Pending:**
+- Team to decide on implementation approach for F5658 and F5659
+- Options: Remove custom columns, accept limitation, custom JS, or switch to name sorting
+
+**Documentation:**
+- `/workspace/docs/ROOT_CAUSE_FOUND.md`
+- `/workspace/docs/SESSION_SUMMARY_DEC_8_2025.md`
+- `/workspace/docs/JIRA_TICKET_SUMMARY.md`
 
 ---
 
