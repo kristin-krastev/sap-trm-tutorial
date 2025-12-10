@@ -28,7 +28,7 @@
 |---|-------|-------|-------|-------|-------|-------|----------|--------|
 | **1** | Table Type | 🟢 | 🟢 | 🟢 | 🟢 | 🟢 | High | ✅ Complete |
 | **2** | Column Header Menu | 🟢 | 🟢 | 🟢 | 🟢 | 🟢 | High | ✅ Complete |
-| **3** | Context Menu | 🔵 | 🔵 | 🔵 | 🔵 | 🔵 | Medium | Not Started |
+| **3** | Context Menu | 🔵 | 🔵 | 🔵 | 🔵 | 🔵 | **CURRENT** | Assessment Starting |
 | **4** | Filter Info Bar | 🚫 | 🚫 | 🚫 | 🚫 | 🚫 | - | Skipped |
 | **5** | Table Column Width | 🟢 | 🟢 | 🟢 | 🟢 | 🟢 | Low | ✅ Complete |
 | **6** | Scroll & Selection Limit | 🚫 | 🚫 | 🚫 | 🚫 | 🚫 | - | Skipped |
@@ -139,16 +139,49 @@
 ### 🟡 In Progress Issues
 
 #### Issue 3: Context Menu
-**Status:** Ready to Start  
-**Current Phase:** Awaiting requirements  
-**Effort:** TBD
+**Status:** Assessment Starting  
+**Current Phase:** Requirements received, ready for assessment  
+**Effort:** 1-2 hours per app (assessment + fixes)
+
+**Documentation:**
+- 📘 **Quick Start:** `/workspace/docs/ISSUE_3_QUICK_START.md` - Start here!
+- 📚 **Full Guide:** `/workspace/docs/ISSUE_3_CONTEXT_MENU_GUIDE.md` - Complete reference
+
+**Problem Description:**
+1. ❌ Context menu actions executed for wrong rows (previously selected, not menu row)
+2. ❌ Not all selection-dependent actions shown in context menu
+3. ❌ Context menu not available despite having actions or navigation
+
+**Expected Behavior:**
+- ✅ Context menu shows all toolbar actions requiring selection
+- ✅ Context menu shows "Open in New Tab or Window" if navigation possible
+- ✅ Actions execute for correct rows (menu row if not selected, OR all selected rows if menu row is selected)
+
+**Good News for Your Apps:**
+- ✅ All apps use Fiori Elements V2 (Smart Template)
+- ✅ Context menu support is **built-in** and automatic
+- ✅ Just need to verify programming guidelines are followed
+
+**Common Violations to Check:**
+1. Using native table APIs (`getSelectedItems()`) instead of extensionAPI
+2. Actions added dynamically via controller (not in manifest)
+3. Manual enable/disable logic (not using `applicablePath`)
+4. Actions hidden via `setVisible(false)`
+
+**Assessment Checklist:**
+- [ ] F5658 - Test context menu, review controller for violations (Priority: High - has multiple actions)
+- [ ] F5655 - Test context menu, review controller for violations
+- [ ] F5659 - Test context menu, review controller for violations (Note: Draft-enabled)
+- [ ] F5665 - Test context menu, review controller for violations (Easy: only 17 rows)
+- [ ] F5666 - Test context menu, review controller for violations
 
 **Next Steps:**
-1. Review Issue 3 requirements/problems
-2. Assess current context menu behavior in all apps
-3. Define desired context menu configuration
-4. Implement changes
-5. Test across apps
+1. ✅ Requirements documented
+2. 🔲 Quick visual test for each app (5 min each)
+3. 🔲 Code review for violations (15 min each)
+4. 🔲 Fix violations if found (variable effort)
+5. 🔲 Test all scenarios (30 min each)
+6. 🔲 Document results
 
 ---
 
@@ -214,29 +247,60 @@ Team has already implemented SAP Fiori best practices correctly. No remediation 
 ---
 
 ### Issue 3: Context Menu
-**Description:** Enable/configure right-click context menu on table rows  
+**Description:** Ensure context menu works correctly and shows all relevant actions  
 **Priority:** Medium  
-**Effort:** Low to Medium  
-**Status:** Not Started
+**Effort:** 1-2 hours per app  
+**Status:** Assessment Starting
 
-**Typical Features:**
-- Copy cell value
-- Copy row
-- Export to Excel
-- Navigate to related objects
-- Custom actions
+**Documentation:**
+- 📘 **Quick Start:** `/workspace/docs/ISSUE_3_QUICK_START.md`
+- 📚 **Full Guide:** `/workspace/docs/ISSUE_3_CONTEXT_MENU_GUIDE.md`
 
-**Tasks:**
-1. Identify current context menu behavior
-2. Define desired context menu options
-3. Configure via annotations or custom implementation
-4. Test across devices
+**Problem:**
+- Actions executed for wrong rows (previously selected, not menu row)
+- Missing selection-dependent actions in context menu
+- Missing "Open in New Tab or Window" option
 
-**Why This Could Be Next:**
-- ✅ Related to column header menu (we're in "menu" mindset)
-- ✅ Medium effort
-- ✅ Less foundational than table type
-- ⚠️ May be affected by table type changes
+**Solution for Fiori Elements (All Your Apps):**
+- ✅ Context menu support is built-in
+- ✅ Automatic if programming guidelines followed
+- ⚠️ Must use extensionAPI, not native table APIs
+- ⚠️ Actions must be defined in manifest
+- ⚠️ Must use applicablePath for enable/disable
+
+**Assessment Tasks:**
+1. 🔲 Visual test: Right-click on row, verify menu appears (5 min per app)
+2. 🔲 Visual test: Verify all actions appear (5 min per app)
+3. 🔲 Visual test: Test Scenario 2 (wrong row bug) (5 min per app)
+4. 🔲 Code review: Search for violations (15 min per app)
+5. 🔲 Fix violations if found (variable)
+6. 🔲 Test all scenarios (30 min per app)
+
+**Critical Test (Scenario 2):**
+- Select rows 1 and 2
+- Right-click on row 3 (NOT selected)
+- Choose action
+- **Expected:** Action processes row 3 ONLY
+- **Wrong:** Action processes rows 1 and 2
+
+**Common Violations:**
+1. Using `oTable.getSelectedItems()` instead of `extensionAPI.getSelectedContexts()`
+2. Actions added via controller code instead of manifest
+3. Manual `setEnabled()` logic instead of `applicablePath`
+4. Actions hidden via `setVisible(false)`
+
+**Known Apps with Actions:**
+- F5658: Has Swap, Forward, Reload actions (requiresSelection: true)
+- F5655: Check for custom actions
+- F5659: Check List Report for custom actions
+- F5665: Check for custom actions
+- F5666: Check for custom actions
+
+**Why This Is Current:**
+- ✅ Affects data integrity (wrong rows processed)
+- ✅ Medium effort (mostly verification)
+- ✅ Can be done independently per app
+- ✅ Table types already verified (Issue 1 complete)
 
 ---
 
