@@ -7,16 +7,16 @@
 
 ## Application Portfolio
 
-| App ID | App Name | Package | Status |
-|--------|----------|---------|--------|
-| **F5658** | Commodity Trader's Order Cockpit | Commodity Hedge Specification | 🟡 In Progress |
-| **F5655** | Observe and Monitor Deal Requests | - | 🟡 In Progress |
-| **F5659** | Manage Commodity Counter Deal Request | - | 🟡 In Progress |
-| **F5665** | Monitor Hedge Constellation | - | 🟡 In Progress |
-| **F5666** | Manage Hedge Constellations Worklist | - | 🟡 In Progress |
+| App ID | App Name | Package | Status | Notes |
+|--------|----------|---------|--------|-------|
+| **F5658** | Commodity Trader's Order Cockpit | Commodity Hedge Specification | 🟡 In Progress | Hybrid app (Fiori + SAP GUI) |
+| **F5655** | Observe and Monitor Deal Requests | - | 🔵 Handled by Colleague | Assessed for Issues 1-2 only |
+| **F5659** | Manage Commodity Counter Deal Request | - | 🟡 In Progress | |
+| **F5665** | Monitor Hedge Constellation | - | 🟡 In Progress | |
+| **F5666** | Manage Hedge Constellations Worklist | - | 🟡 In Progress | |
 
 **Legend:**  
-🟢 Complete | 🟡 In Progress | 🔵 Not Started | 🚫 Skipped | ⚠️ Blocked
+🟢 Complete | 🟡 In Progress | 🔵 Not Started | 🚫 Skipped | ⚠️ Blocked/Deferred | 🔷 Handled by Colleague
 
 ---
 
@@ -28,7 +28,7 @@
 |---|-------|-------|-------|-------|-------|-------|----------|--------|
 | **1** | Table Type | 🟢 | 🟢 | 🟢 | 🟢 | 🟢 | High | ✅ Complete |
 | **2** | Column Header Menu | 🟢 | 🟢 | 🟢 | 🟢 | 🟢 | High | ✅ Complete |
-| **3** | Context Menu | ⚠️ | 🔵 | 🔵 | 🔵 | 🔵 | **CURRENT** | Assessment In Progress |
+| **3** | Context Menu | ⚠️ | 🔷 | 🔵 | 🔵 | 🔵 | **CURRENT** | Assessment In Progress |
 | **4** | Filter Info Bar | 🚫 | 🚫 | 🚫 | 🚫 | 🚫 | - | Skipped |
 | **5** | Table Column Width | 🟢 | 🟢 | 🟢 | 🟢 | 🟢 | Low | ✅ Complete |
 | **6** | Scroll & Selection Limit | 🚫 | 🚫 | 🚫 | 🚫 | 🚫 | - | Skipped |
@@ -170,8 +170,8 @@
 
 **Assessment Checklist:**
 - [ ] ⚠️ F5658 - **DEFERRED** - Uses tree table, redirects to SAP GUI (hybrid app) - Requires team discussion
-- [ ] F5655 - Test context menu, review controller for violations (**START HERE**)
-- [ ] F5659 - Test context menu, review controller for violations (Note: Draft-enabled)
+- [x] 🔷 F5655 - **HANDLED BY COLLEAGUE** - Assessed for Issues 1-2, skipped for future issues
+- [ ] F5659 - Test context menu, review controller for violations (**START HERE** - Note: Draft-enabled)
 - [ ] F5665 - Test context menu, review controller for violations (Easy: only 17 rows)
 - [ ] F5666 - Test context menu, review controller for violations
 
