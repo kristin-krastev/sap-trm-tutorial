@@ -1,0 +1,378 @@
+# Fiori Apps Modernization Tracker
+**Project:** Commodity Trading Apps - Fiori Elements Modernization  
+**Last Updated:** December 8, 2025  
+**Status:** In Progress
+
+---
+
+## Application Portfolio
+
+| App ID | App Name | Package | Status |
+|--------|----------|---------|--------|
+| **F5658** | Commodity Trader's Order Cockpit | Commodity Hedge Specification | 🟡 In Progress |
+| **F5655** | Observe and Monitor Deal Requests | - | 🟡 In Progress |
+| **F5659** | Manage Commodity Counter Deal Request | - | 🟡 In Progress |
+| **F5665** | Monitor Hedge Constellation | - | 🔵 Not Started |
+| **F5666** | Manage Hedge Constellations Worklist | - | 🔵 Not Started |
+
+**Legend:**  
+🟢 Complete | 🟡 In Progress | 🔵 Not Started | 🚫 Skipped | ⚠️ Blocked
+
+---
+
+## Modernization Issues Matrix
+
+### Table-Related Issues
+
+| # | Issue | F5658 | F5655 | F5659 | F5665 | F5666 | Priority | Status |
+|---|-------|-------|-------|-------|-------|-------|----------|--------|
+| **1** | Table Type | 🔵 | 🔵 | 🔵 | 🔵 | 🔵 | **NEXT** | Not Started |
+| **2** | Column Header Menu | 🟡 | 🔵 | 🟡 | 🔵 | 🔵 | **CURRENT** | In Progress |
+| **3** | Context Menu | 🔵 | 🔵 | 🔵 | 🔵 | 🔵 | Medium | Not Started |
+| **4** | Filter Info Bar | 🚫 | 🚫 | 🚫 | 🚫 | 🚫 | - | Skipped |
+| **5** | Table Column Width | 🟢 | 🟢 | 🟢 | 🟢 | 🟢 | Low | ✅ Complete |
+| **6** | Scroll & Selection Limit | 🚫 | 🚫 | 🚫 | 🚫 | 🚫 | - | Skipped |
+| **7** | Actions for All Items | 🚫 | 🚫 | 🚫 | 🚫 | 🚫 | - | Skipped |
+
+### Other Topics
+
+| # | Issue | F5658 | F5655 | F5659 | F5665 | F5666 | Priority | Status |
+|---|-------|-------|-------|-------|-------|-------|----------|--------|
+| **8** | Information Density (Object Page) | 🔵 | 🔵 | 🔵 | 🔵 | 🔵 | Medium | Not Started |
+| **9** | Design-time Cards | 🔵 | 🔵 | 🔵 | 🔵 | 🔵 | High | Not Started |
+| **10** | Extensibility-enablement | 🚫 | 🚫 | 🚫 | 🚫 | 🚫 | - | Skipped |
+
+---
+
+## Current Status
+
+### ✅ Completed Issues
+
+#### Issue 5: Table Column Width
+**Status:** Complete across all 5 apps  
+**Effort:** Low  
+**Changes:** Column width optimization implemented  
+**Documentation:** N/A
+
+---
+
+### 🟡 In Progress Issues
+
+#### Issue 2: Column Header Menu (Sort By ID/Name)
+**Status:** 4/5 apps analyzed, 1 remaining  
+**Current Task:** F5655 - Observe and Monitor Deal Requests  
+**Effort:** Medium (Investigation) + Variable (Implementation)
+
+**Progress by App:**
+
+| App | Investigation | Root Cause | Solution | Status |
+|-----|--------------|------------|----------|--------|
+| F5658 - Trader's Order Cockpit | ✅ | Custom fragment override | Documented | ⚠️ Awaiting team decision |
+| F5659 - Counter Deal Request | ✅ | Custom fragment override | Documented | ⚠️ Awaiting team decision |
+| **F5655 - Observe & Monitor** | 🔵 | - | - | **NEXT** |
+| F5665 - Monitor Constellation | 🔵 | - | - | Pending |
+| F5666 - Manage Worklist | 🔵 | - | - | Pending |
+
+**Key Finding (F5658 & F5659):**
+- Root cause: `CustomColumns.fragment.xml` hardcodes `sortProperty` to ID field only
+- Backend: Correctly configured
+- Impact: "Sort by Name" option missing for DCS and Hedge Book columns
+- Solution options: 4 approaches documented, awaiting team decision
+- Documentation: 
+  - `/workspace/docs/ROOT_CAUSE_FOUND.md`
+  - `/workspace/docs/SESSION_SUMMARY_DEC_8_2025.md`
+  - `/workspace/docs/JIRA_TICKET_SUMMARY.md`
+
+---
+
+## Issue Details
+
+### Issue 1: Table Type
+**Description:** Verify and standardize table types across apps  
+**Priority:** High (Foundational)  
+**Effort:** Low to Medium  
+**Status:** Not Started
+
+**Common Table Types:**
+- `GridTable` - For large datasets, desktop optimized
+- `ResponsiveTable` - Mobile-friendly, smaller datasets
+- `AnalyticalTable` - For analytical views with aggregations
+- `TreeTable` - Hierarchical data
+
+**Tasks:**
+1. Identify current table type in each app (`manifest.json` → `sap.ui.generic.app` → `pages` → `component` → `settings` → `gridTable/responsiveTable`)
+2. Verify table type aligns with use case (data volume, device target, features needed)
+3. Change if necessary
+4. Test impact on existing features
+
+**Why This Should Be Next:**
+- ✅ Foundational - affects other table features
+- ✅ Low to medium effort
+- ✅ Should be done before context menu, sorting, etc.
+- ✅ Changing later may require rework of other features
+
+---
+
+### Issue 2: Column Header Menu
+**Description:** Enable sorting by both ID and Name fields  
+**Priority:** Medium  
+**Effort:** Medium (Investigation) + Variable (Implementation)  
+**Status:** In Progress
+
+**Completed:**
+- ✅ F5658: Root cause identified (custom fragment)
+- ✅ F5659: Root cause identified (custom fragment)
+- ✅ Solution options documented
+
+**Remaining:**
+- 🔵 F5655: Investigate
+- 🔵 F5665: Investigate
+- 🔵 F5666: Investigate
+
+**Common Causes:**
+- Custom UI fragments overriding standard behavior
+- Missing `@ObjectModel.text.element` annotations
+- Incorrect `@Semantics.text` values
+- Missing text fields in metadata extension
+
+---
+
+### Issue 3: Context Menu
+**Description:** Enable/configure right-click context menu on table rows  
+**Priority:** Medium  
+**Effort:** Low to Medium  
+**Status:** Not Started
+
+**Typical Features:**
+- Copy cell value
+- Copy row
+- Export to Excel
+- Navigate to related objects
+- Custom actions
+
+**Tasks:**
+1. Identify current context menu behavior
+2. Define desired context menu options
+3. Configure via annotations or custom implementation
+4. Test across devices
+
+**Why This Could Be Next:**
+- ✅ Related to column header menu (we're in "menu" mindset)
+- ✅ Medium effort
+- ✅ Less foundational than table type
+- ⚠️ May be affected by table type changes
+
+---
+
+### Issue 5: Table Column Width ✅
+**Description:** Optimize column widths for better UX  
+**Priority:** Low  
+**Effort:** Low  
+**Status:** ✅ Complete
+
+All apps completed.
+
+---
+
+### Issue 8: Information Density on Object Page
+**Description:** Optimize information density (Cozy vs. Compact mode)  
+**Priority:** Medium  
+**Effort:** Low  
+**Status:** Not Started
+
+**Scope:**
+- Object page only (not list report)
+- Cozy: More whitespace, touch-friendly
+- Compact: Denser, desktop optimized
+
+**Tasks:**
+1. Review current density setting
+2. Align with SAP Fiori guidelines
+3. Configure via `manifest.json`
+4. Test on different devices
+
+---
+
+### Issue 9: Design-time Cards
+**Description:** Configure/customize UI cards for design-time  
+**Priority:** High (Complex)  
+**Effort:** High  
+**Status:** Not Started
+
+**Scope:**
+- Page editor cards
+- Custom cards for flexibility
+- Design-time metadata
+
+---
+
+## Workflow Strategy
+
+### Current Approach: "One Issue at a Time, All Apps"
+1. Pick one issue
+2. Go through each app and fix if relevant
+3. Move to next issue
+
+**Benefits:**
+- ✅ Consistent implementation across apps
+- ✅ Build expertise in one area
+- ✅ Easier to document patterns
+- ✅ Efficient context switching
+
+---
+
+## Recommendation: Next Issue
+
+### 🥇 **Option 1: Issue 1 - Table Type** ⭐ RECOMMENDED
+
+**Why First:**
+- 🏗️ **Foundational** - Affects all other table features
+- 🚀 **Low effort** - Usually just configuration check/change
+- 🎯 **High impact** - Wrong table type can cause performance issues
+- 🔧 **Prevents rework** - Other features may need adjustment if table type changes later
+
+**Approach:**
+1. Check `manifest.json` for each app
+2. Verify table type matches use case
+3. Change if needed (usually `GridTable` for large datasets)
+4. Quick test
+5. Move to next app
+
+**Estimated Time:** 30-60 minutes per app
+
+---
+
+### 🥈 **Option 2: Issue 3 - Context Menu**
+
+**Why Second:**
+- 🔄 **Related to current work** - We're already in "menu" mindset
+- 📋 **Medium effort** - Configuration + some custom code possible
+- 👍 **User-facing** - Direct UX improvement
+- ⚠️ **Dependency risk** - May be affected by table type
+
+**Approach:**
+1. Check current context menu behavior
+2. Define requirements
+3. Configure via annotations
+4. Test
+
+**Estimated Time:** 1-2 hours per app
+
+---
+
+### 🥉 **Option 3: Finish Issue 2 First**
+
+**Complete F5655, F5665, F5666:**
+- 🎯 **Finish what we started** - Close out Issue 2 completely
+- 📊 **Build complete picture** - Understand all custom fragments
+- 📝 **Complete documentation** - Full cross-app analysis
+- ⏱️ **Quick wins possible** - If apps don't have custom fragments
+
+**Approach:**
+1. Analyze F5655 (Observe & Monitor)
+2. Check for custom fragments
+3. Document findings
+4. Repeat for F5665 and F5666
+
+**Estimated Time:** 30 minutes per app (investigation only)
+
+---
+
+## My Recommendation 🎯
+
+### **Do Issue 1 (Table Type) Next**
+
+**Reasoning:**
+1. It's **foundational** - Get it right before doing more table work
+2. It's **quick** - Mostly verification, minimal changes expected
+3. It **prevents rework** - Context menu features may depend on table type
+4. It's **low risk** - Usually just configuration
+5. You'll **learn the apps** - Good way to explore each manifest.json
+
+**Then:**
+- Issue 3 (Context Menu) - Related to table features
+- Complete Issue 2 (Column Header Menu) for remaining apps
+- Issue 8 (Information Density) - Object page work
+- Issue 9 (Design-time Cards) - Most complex, save for last
+
+---
+
+## Next Steps
+
+### Immediate Actions
+1. ✅ Complete F5655 (Observe & Monitor) for Issue 2
+2. ✅ Document findings (if custom fragment found)
+3. ✅ Start Issue 1 (Table Type) across all apps
+4. Review and update this tracker
+
+### Questions to Consider
+- Do we want to finish Issue 2 completely before moving on?
+- Is there a business deadline for any specific issue?
+- Are there dependencies between issues we should consider?
+- Should we tackle apps with similar patterns together?
+
+---
+
+## Success Metrics
+
+### Definition of Done (Per Issue, Per App)
+- ✅ Investigation complete
+- ✅ Root cause identified (if issue exists)
+- ✅ Solution implemented OR documented (if awaiting decision)
+- ✅ Tested in DEV
+- ✅ Tested in QA
+- ✅ Documented
+- ✅ Deployed to PRD (if approved)
+
+### Overall Project Success
+- All non-skipped issues addressed across all 5 apps
+- Documentation complete
+- Team trained on changes
+- Users satisfied with improvements
+
+---
+
+## Risk Register
+
+| Risk | Impact | Mitigation |
+|------|--------|------------|
+| Custom fragments override standard behavior | High | Document all custom fragments, consider removal vs. enhancement |
+| Table type changes break existing features | High | Test thoroughly, verify all features after change |
+| Multiple apps may have different patterns | Medium | Document patterns, create reusable solutions |
+| Team decision delays (Issue 2) | Low | Continue with other issues, revisit later |
+
+---
+
+## Resources
+
+### Documentation
+- `/workspace/docs/ROOT_CAUSE_FOUND.md` - Issue 2 technical details
+- `/workspace/docs/SESSION_SUMMARY_DEC_8_2025.md` - Issue 2 investigation summary
+- `/workspace/docs/JIRA_TICKET_SUMMARY.md` - Issue 2 Jira summary
+- `/workspace/docs/FIORI_MODERNIZATION_TRACKER.md` - This tracker
+
+### References
+- SAP Fiori Design Guidelines
+- UI5 Table Documentation
+- Fiori Elements Documentation
+- Custom Fragment Best Practices
+
+---
+
+## Notes
+
+### Lessons Learned (Issue 2)
+- Always check `manifest.json` for custom fragments
+- Service Binding Preview ≠ Deployed App behavior
+- Custom fragments can override backend configuration
+- Investigation before implementation prevents wasted effort
+
+### Patterns Observed
+- Custom navigation links often require custom fragments
+- Custom fragments often limit standard features
+- Balance needed between customization and standard behavior
+
+---
+
+**Last Updated:** December 8, 2025  
+**Next Review:** After completing F5655 or starting Issue 1
