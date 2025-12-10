@@ -177,6 +177,62 @@
 
 ---
 
+## Complete Change Checklist (When Changing Table Type)
+
+**When you change from Responsive Table to Grid Table (or vice versa), you MUST check/update:**
+
+### 🎯 Mandatory Updates
+
+| # | Component | What to Check/Update | Impact if Skipped |
+|---|-----------|---------------------|-------------------|
+| 1 | **manifest.json** | Change `responsiveTable: true` to `gridTable: true` | Table won't change |
+| 2 | **manifest.json** | Add `condensedTableLayout: true` (Grid Table only) | Poor information density |
+| 3 | **Custom Fragments** | Update column type (`sap.m.Column` → `sap.ui.table.Column`) | Runtime errors |
+| 4 | **Custom Data** | Move `sortProperty`/`filterProperty` (RT uses custom data, GT uses attributes) | Sorting/filtering broken |
+| 5 | **Column IDs** | Reuse same stable IDs for columns | User variants lost |
+| 6 | **Controller Code** | Update selection API (`getSelectedItems()` → `getSelectedIndices()`) | Actions break |
+| 7 | **Controller Code** | Update column manipulation API | Dynamic features break |
+| 8 | **Extension Columns** | Update manifest extension point name | Custom columns don't appear |
+| 9 | **Cell Controls** | Verify all controls support Grid Table | Display issues |
+| 10 | **Condensed Layout** | Verify all controls support condensed mode | Layout breaks |
+
+### 📋 Verification Checklist
+
+Before deploying table type change:
+
+**Backend/Configuration:**
+- [ ] Manifest.json updated with correct table type
+- [ ] Condensed layout enabled (if Grid Table + no unsupported controls)
+- [ ] Custom fragments updated (if present)
+- [ ] Extension column manifest settings updated (if present)
+
+**Custom Code:**
+- [ ] Controller selection API updated
+- [ ] Controller column manipulation API updated
+- [ ] All table-related controller code reviewed
+- [ ] Stable IDs preserved for all columns
+
+**Controls & Content:**
+- [ ] All cell controls are allowed in Grid Table
+- [ ] All cell controls support condensed mode (if enabled)
+- [ ] Single-line content used (no variable row heights)
+- [ ] No ProgressIndicator or other unsupported controls
+
+**Testing:**
+- [ ] Table loads with data
+- [ ] Selection works (single and multi-select)
+- [ ] Sorting works (all columns)
+- [ ] Filtering works (all filters)
+- [ ] Actions work (row and table actions)
+- [ ] Navigation works
+- [ ] User variants still work
+- [ ] System variants still work
+- [ ] Export to Excel works
+- [ ] Personalization persists
+- [ ] Performance is acceptable with max data volume
+
+---
+
 ## Implementation Guide
 
 ### Step 1: Check Current Table Type
@@ -305,18 +361,27 @@
 
 ---
 
-### Step 4: Handle Custom Fragments (If Present)
+### Step 4: Handle Custom Fragments and Extensions (If Present)
 
-#### ⚠️ Important: Custom Column Fragments
+#### ⚠️ Critical: Changing Table Type Requires Multiple Updates
 
-If you have custom column definitions (like `CustomColumns.fragment.xml`), verify they work with the new table type:
+When changing table type, you MUST update:
+1. ✅ Manifest.json table settings
+2. ✅ Custom column fragments (XML)
+3. ✅ Controller code (JavaScript)
+4. ✅ Extension column definitions
+5. ✅ Custom data properties
+
+#### A. Custom Column Fragments - API Differences
 
 **Grid Table uses:** `sap.ui.table.Column`  
 **Responsive Table uses:** `sap.m.Column`
 
-**Example - Grid Table Column:**
+##### Grid Table Column (sap.ui.table.Column)
 ```xml
-<table:Column xmlns:table="sap.ui.table">
+<table:Column xmlns:table="sap.ui.table" 
+              sortProperty="ProductID" 
+              filterProperty="ProductID">
   <Label text="Product"/>
   <table:template>
     <Text text="{ProductID}"/>
@@ -324,9 +389,20 @@ If you have custom column definitions (like `CustomColumns.fragment.xml`), verif
 </table:Column>
 ```
 
-**Example - Responsive Table Column:**
+**Key Features:**
+- Built-in `sortProperty` and `filterProperty` attributes
+- Uses `<table:template>` for cell content
+- Single control per cell (keep single-line for consistent row height)
+
+##### Responsive Table Column (sap.m.Column)
 ```xml
 <Column xmlns="sap.m">
+  <customData>
+    <core:CustomData key="p13nData" 
+                     value='\{"columnKey": "ProductID", 
+                             "sortProperty": "ProductID", 
+                             "filterProperty": "ProductID"}'/>
+  </customData>
   <Text text="Product"/>
   <ColumnListItem>
     <Text text="{ProductID}"/>
@@ -334,10 +410,400 @@ If you have custom column definitions (like `CustomColumns.fragment.xml`), verif
 </Column>
 ```
 
-**Action Required:**
-- If custom fragments exist and table type changes
-- Update fragment to use correct column type
-- Test thoroughly
+**Key Features:**
+- `sortProperty` and `filterProperty` provided as **custom data**
+- Uses `<ColumnListItem>` for cell content
+- Can have multiple controls per cell (flexible layout)
+
+#### B. Custom Data Differences (Critical!)
+
+##### Grid Table Custom Data
+```xml
+<table:Column>
+  <table:customData>
+    <core:CustomData key="p13nData"
+      value='\{"columnKey": "DCS_ID", 
+              "leadingProperty": "CmmdtyHedgePlanExposureDCSID", 
+              "columnIndex": "2"}'/>
+  </table:customData>
+</table:Column>
+```
+
+**Note:** `sortProperty` and `filterProperty` are direct attributes on `<table:Column>`
+
+##### Responsive Table Custom Data
+```xml
+<Column>
+  <customData>
+    <core:CustomData key="p13nData"
+      value='\{"columnKey": "DCS_ID", 
+              "leadingProperty": "CmmdtyHedgePlanExposureDCSID",
+              "sortProperty": "CmmdtyHedgePlanExposureDCSID",
+              "filterProperty": "CmmdtyHedgePlanExposureDCSID",
+              "columnIndex": "2"}'/>
+  </customData>
+</Column>
+```
+
+**Note:** `sortProperty` and `filterProperty` MUST be in custom data for Responsive Table
+
+---
+
+#### C. Controller Code - API Differences
+
+##### Selection API Differences
+
+**Grid Table Selection:**
+```javascript
+// Get selected items
+var oTable = this.byId("myGridTable");
+var aSelectedIndices = oTable.getSelectedIndices();
+var aSelectedContexts = aSelectedIndices.map(function(iIndex) {
+    return oTable.getContextByIndex(iIndex);
+});
+
+// Get selected item count
+var iSelectedCount = oTable.getSelectedIndices().length;
+
+// Clear selection
+oTable.clearSelection();
+
+// Set selection
+oTable.setSelectedIndex(5);
+oTable.addSelectionInterval(0, 3); // Select rows 0-3
+```
+
+**Responsive Table Selection:**
+```javascript
+// Get selected items
+var oTable = this.byId("myResponsiveTable");
+var aSelectedItems = oTable.getSelectedItems();
+var aSelectedContexts = aSelectedItems.map(function(oItem) {
+    return oItem.getBindingContext();
+});
+
+// Get selected item count
+var iSelectedCount = oTable.getSelectedItems().length;
+
+// Clear selection
+oTable.removeSelections(true);
+
+// Set selection
+var oItem = oTable.getItems()[5];
+oTable.setSelectedItem(oItem);
+```
+
+##### Column Header Manipulation
+
+**Grid Table:**
+```javascript
+// Get column
+var oColumn = oTable.getColumns()[0];
+
+// Change header text
+oColumn.getLabel().setText("New Header");
+
+// Show/hide column
+oColumn.setVisible(false);
+
+// Get sort property
+var sSortProperty = oColumn.getSortProperty();
+```
+
+**Responsive Table:**
+```javascript
+// Get column
+var oColumn = oTable.getColumns()[0];
+
+// Change header text
+oColumn.getHeader().setText("New Header");
+
+// Show/hide column
+oColumn.setVisible(false);
+
+// Get sort property (from custom data)
+var oCustomData = oColumn.data("p13nData");
+var sSortProperty = oCustomData ? JSON.parse(oCustomData).sortProperty : "";
+```
+
+##### Cell Visibility/Content Manipulation
+
+**Grid Table:**
+```javascript
+// Cells are in templates, update via binding
+var oTemplate = oColumn.getTemplate();
+oTemplate.setVisible("{= ${Status} === 'Active' }");
+```
+
+**Responsive Table:**
+```javascript
+// Cells are in ColumnListItems
+var aItems = oTable.getItems();
+aItems.forEach(function(oItem) {
+    var oCells = oItem.getCells();
+    oCells[0].setVisible(true);
+});
+```
+
+---
+
+#### D. Extension Columns - Manifest Differences (Fiori Elements V2)
+
+##### Grid Table Extension Columns (Manifest)
+```json
+{
+  "sap.ui.generic.app": {
+    "pages": [
+      {
+        "entitySet": "C_YourEntitySet",
+        "component": {
+          "settings": {
+            "gridTable": true,
+            "tableSettings": {
+              "type": "GridTable"
+            }
+          }
+        },
+        "pages": []
+      }
+    ]
+  },
+  "extends": {
+    "extensions": {
+      "sap.ui.controllerExtensions": {},
+      "sap.ui.viewExtensions": {
+        "sap.suite.ui.generic.template.ListReport.view.ListReport": {
+          "ResponsiveTableColumnsExtension|C_YourEntitySet": {
+            "type": "XML",
+            "className": "sap.ui.core.Fragment",
+            "fragmentName": "your.app.ext.fragment.CustomColumns"
+          }
+        }
+      }
+    }
+  }
+}
+```
+
+##### Responsive Table Extension Columns (Manifest)
+```json
+{
+  "extends": {
+    "extensions": {
+      "sap.ui.viewExtensions": {
+        "sap.suite.ui.generic.template.ListReport.view.ListReport": {
+          "ResponsiveTableColumnsExtension|C_YourEntitySet": {
+            "type": "XML",
+            "className": "sap.ui.core.Fragment",
+            "fragmentName": "your.app.ext.fragment.CustomColumns"
+          }
+        }
+      }
+    }
+  }
+}
+```
+
+**Note:** Extension point names differ between table types!
+
+---
+
+#### E. Stable IDs - Reuse for Extension Columns
+
+**Important:** When updating custom columns, reuse the same stable IDs to preserve:
+- User personalizations
+- Saved variants
+- Column order settings
+
+**Example:**
+```xml
+<!-- OLD: Responsive Table -->
+<Column id="myCustomColumn_DCS">
+  <customData>
+    <core:CustomData key="p13nData" value='\{"columnKey": "DCS_ID"}'/>
+  </customData>
+</Column>
+
+<!-- NEW: Grid Table - REUSE SAME ID -->
+<table:Column id="myCustomColumn_DCS">
+  <table:customData>
+    <core:CustomData key="p13nData" value='\{"columnKey": "DCS_ID"}'/>
+  </table:customData>
+</table:Column>
+```
+
+---
+
+#### F. Allowed Controls in Grid Table
+
+Grid Table supports most common controls, but has restrictions:
+
+##### ✅ Allowed Controls (Examples)
+- `sap.m.Text` (recommended - use `wrapping: false` for single-line)
+- `sap.m.ObjectIdentifier`
+- `sap.m.ObjectStatus`
+- `sap.m.Link`
+- `sap.m.Input` (for editable tables)
+- `sap.m.CheckBox`
+- `sap.m.Button`
+- `sap.m.Icon`
+- `sap.m.Label`
+- `sap.m.HBox` / `sap.m.VBox` (simple layouts)
+
+##### ⚠️ Restricted/Not Recommended
+- Complex layouts (multiple lines)
+- `sap.m.ProgressIndicator` (doesn't support condensed mode)
+- Heavy controls (charts, complex forms)
+- Controls that cause variable row heights
+
+##### 🔍 Full List of Allowed Controls
+See SAP Documentation: [Allowed Controls in Grid Table](https://ui5.sap.com/#/topic/148892ff9aea4a18b912829791e38f3e)
+
+##### Best Practice: Single-Line Content
+```xml
+<!-- ✅ GOOD: Single-line, consistent row height -->
+<table:Column>
+  <table:template>
+    <Text text="{ProductID}" wrapping="false"/>
+  </table:template>
+</table:Column>
+
+<!-- ❌ BAD: Multi-line, variable row height -->
+<table:Column>
+  <table:template>
+    <VBox>
+      <Text text="{ProductID}"/>
+      <Text text="{ProductName}"/>
+    </VBox>
+  </table:template>
+</table:Column>
+```
+
+---
+
+#### G. Variant Compatibility
+
+**Good News:** User variants usually continue to work after table type changes! ✅
+
+**Why?**
+- Variants store column keys, not table-specific properties
+- As long as column keys remain stable, variants are preserved
+
+**Ensure Compatibility:**
+1. ✅ Reuse stable IDs for columns
+2. ✅ Keep same `columnKey` in custom data
+3. ✅ Keep same field names/entity properties
+
+**Test After Change:**
+- Load existing variants (system and user variants)
+- Verify columns appear correctly
+- Verify filters still work
+- Verify sort orders still work
+
+---
+
+#### H. Condensed Table Layout - Control Support Requirements
+
+##### When to Enable Condensed Layout
+
+**Enable `condensedTableLayout: true` for Grid Table on List Reports IF:**
+- ✅ All controls in the table support condensed mode
+- ✅ Desktop is primary use case
+- ✅ Information density is important
+
+##### Controls That DON'T Support Condensed Mode
+
+⚠️ **Do NOT enable condensed layout if your table contains:**
+- `sap.m.ProgressIndicator` ❌
+- `sap.m.RatingIndicator` ❌
+- `sap.suite.ui.microchart.*` (some chart types) ⚠️
+- Complex custom controls (check documentation) ⚠️
+
+##### Controls That DO Support Condensed Mode
+
+✅ **Safe to use with condensed layout:**
+- `sap.m.Text`
+- `sap.m.Link`
+- `sap.m.ObjectIdentifier`
+- `sap.m.ObjectStatus`
+- `sap.m.ObjectNumber`
+- `sap.m.Input`
+- `sap.m.CheckBox`
+- `sap.m.Button`
+- `sap.m.Icon`
+- `sap.m.Label`
+
+##### How Condensed Layout Works
+
+**Desktop (Default):**
+```json
+"condensedTableLayout": true
+```
+- Applies `.sapUiSizeCompact` CSS class
+- Reduces row height
+- Reduces padding
+- More rows visible per screen
+- Better information density
+
+**Mobile/Tablet:**
+- Condensed layout is **automatically disabled**
+- Uses comfortable/cozy mode regardless of setting
+- Touch-friendly spacing maintained
+
+##### Check Before Enabling
+
+**Step 1:** Review all columns in your table
+
+**Step 2:** Identify controls used in each column
+```xml
+<table:Column>
+  <table:template>
+    <!-- What control is here? -->
+    <Text text="{field}"/>  <!-- ✅ Supports condensed -->
+  </table:template>
+</table:Column>
+```
+
+**Step 3:** Verify all controls support condensed mode
+
+**Step 4:** If any control doesn't support condensed mode:
+- **Option A:** Remove that control (use alternative)
+- **Option B:** Don't enable condensed layout
+- **Option C:** Use extension column to conditionally show control based on device
+
+##### Example: Handling Progress Indicator
+
+**❌ BAD: Progress Indicator with Condensed Layout**
+```json
+// manifest.json
+"condensedTableLayout": true  // Will break ProgressIndicator display
+```
+
+```xml
+<!-- Column with ProgressIndicator -->
+<table:Column>
+  <table:template>
+    <ProgressIndicator percentValue="{CompletionPercent}"/>
+  </table:template>
+</table:Column>
+```
+
+**✅ GOOD: Use ObjectStatus Instead**
+```xml
+<table:Column>
+  <table:template>
+    <ObjectStatus 
+      text="{CompletionPercent}%" 
+      state="{= ${CompletionPercent} >= 100 ? 'Success' : 'Warning'}"/>
+  </table:template>
+</table:Column>
+```
+
+##### Reference Documentation
+
+See SAP Fiori Design Guidelines:
+- [Condensed Table Layout](https://experience.sap.com/fiori-design-web/grid-table/#condensed-table-layout)
+- [Content Density](https://experience.sap.com/fiori-design-web/content-density/)
 
 ---
 

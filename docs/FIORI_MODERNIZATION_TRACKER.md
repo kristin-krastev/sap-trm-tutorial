@@ -90,26 +90,56 @@
 ### Issue 1: Table Type
 **Description:** Verify and standardize table types across apps  
 **Priority:** High (Foundational)  
-**Effort:** Low to Medium  
+**Effort:** Low (verification only) to Medium (if changes needed)  
 **Status:** Not Started
 
+**Documentation:**
+- 📘 **Quick Start:** `/workspace/docs/ISSUE_1_QUICK_START.md` - Start here!
+- 📚 **Full Guide:** `/workspace/docs/ISSUE_1_TABLE_TYPE_GUIDE.md` - Complete reference
+
 **Common Table Types:**
-- `GridTable` - For large datasets, desktop optimized
-- `ResponsiveTable` - Mobile-friendly, smaller datasets
-- `AnalyticalTable` - For analytical views with aggregations
-- `TreeTable` - Hierarchical data
+- `GridTable` - For large datasets, desktop optimized, comparison use cases
+- `ResponsiveTable` - Mobile-friendly, smaller datasets (<200 items)
+- `AnalyticalTable` - For analytical views with aggregations/grouping
+- `TreeTable` - Hierarchical data with parent-child relationships
+
+**Key Decision Criteria:**
+- **Use Grid Table** if: >200 items OR comparison critical OR List Report
+- **Use Responsive Table** if: <200 items AND mobile-first AND flexible content needed
+
+**Recommended for All 5 Apps:**
+```json
+"gridTable": true,
+"condensedTableLayout": true
+```
 
 **Tasks:**
-1. Identify current table type in each app (`manifest.json` → `sap.ui.generic.app` → `pages` → `component` → `settings` → `gridTable/responsiveTable`)
-2. Verify table type aligns with use case (data volume, device target, features needed)
-3. Change if necessary
-4. Test impact on existing features
+1. ✅ Review decision criteria and SAP guidelines
+2. 🔲 Check manifest.json for all 5 apps (Quick Assessment - 15 min per app)
+3. 🔲 Identify apps needing changes
+4. 🔲 Check for custom fragments/controllers (impacts effort)
+5. 🔲 Implement changes (prioritize apps without custom code first)
+6. 🔲 Test thoroughly (functional, performance, variants)
+7. 🔲 Deploy to QA → PRD
 
 **Why This Should Be Next:**
-- ✅ Foundational - affects other table features
-- ✅ Low to medium effort
-- ✅ Should be done before context menu, sorting, etc.
-- ✅ Changing later may require rework of other features
+- ✅ Foundational - affects other table features (context menu, sorting, etc.)
+- ✅ Low effort for apps without custom code (just manifest change)
+- ✅ Should be done before implementing other table features
+- ✅ Prevents rework later
+- ✅ High impact on usability and performance
+
+**Known Impacts:**
+- ⚠️ F5658 and F5659 have custom fragments (from Issue 2 investigation)
+- ⚠️ Custom fragments require additional updates (XML, custom data)
+- ⚠️ Custom controllers may need API changes (selection, column manipulation)
+- ✅ User variants usually survive table type changes (if column keys stable)
+
+**Critical Considerations:**
+- 🚨 Changing table type requires checking: manifest, fragments, controllers, custom data, stable IDs
+- 🚨 Condensed layout only works if all controls support it (no ProgressIndicator, etc.)
+- 🚨 Different selection APIs between Grid Table and Responsive Table
+- ✅ Grid Table + condensed layout = best information density for List Reports
 
 ---
 
