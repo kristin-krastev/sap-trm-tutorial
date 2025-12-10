@@ -28,7 +28,7 @@
 |---|-------|-------|-------|-------|-------|-------|----------|--------|
 | **1** | Table Type | 🟢 | 🟢 | 🟢 | 🟢 | 🟢 | High | ✅ Complete |
 | **2** | Column Header Menu | 🟢 | 🟢 | 🟢 | 🟢 | 🟢 | High | ✅ Complete |
-| **3** | Context Menu | ⚠️ | 🔷 | 🔵 | 🔵 | 🔵 | **CURRENT** | Assessment In Progress |
+| **3** | Context Menu | ⚠️ | 🔷 | 🟢 | 🔵 | 🔵 | **CURRENT** | Assessment In Progress |
 | **4** | Filter Info Bar | 🚫 | 🚫 | 🚫 | 🚫 | 🚫 | - | Skipped |
 | **5** | Table Column Width | 🟢 | 🟢 | 🟢 | 🟢 | 🟢 | Low | ✅ Complete |
 | **6** | Scroll & Selection Limit | 🚫 | 🚫 | 🚫 | 🚫 | 🚫 | - | Skipped |
