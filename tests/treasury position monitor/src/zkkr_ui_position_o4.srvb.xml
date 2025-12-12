@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<serviceBinding:ServiceBinding xmlns:serviceBinding="http://www.sap.com/adt/servicebinding">
+  <serviceBinding:bindingType>ODATA</serviceBinding:bindingType>
+  <serviceBinding:version>V4</serviceBinding:version>
+  <serviceBinding:serviceName>ZKKR_UI_POSITION</serviceBinding:serviceName>
+  <serviceBinding:serviceDefinition>ZKKR_UI_POSITION</serviceBinding:serviceDefinition>
+</serviceBinding:ServiceBinding>

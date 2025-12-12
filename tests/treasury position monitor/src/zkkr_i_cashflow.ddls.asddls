@@ -68,6 +68,13 @@ define view entity ZKKR_I_CASHFLOW
       @UI.hidden: true
       ChangedAt,
 
+      // Virtual fields for criticality
+      case
+        when Amount > 0 then 3  // Positive: Green
+        when Amount < 0 then 1  // Negative: Red
+        else 0                  // Neutral: Grey
+      end as AmountCriticality,
+
       // Associations
       _Position
 }

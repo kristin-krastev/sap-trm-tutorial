@@ -1,0 +1,152 @@
+@Metadata.layer: #CORE
+@UI: {
+  headerInfo: {
+    typeName: 'Cashflow',
+    typeNamePlural: 'Cashflows',
+    title: {
+      type: #STANDARD,
+      value: 'CashflowID'
+    },
+    description: {
+      type: #STANDARD,
+      value: 'CashflowType'
+    }
+  },
+  presentationVariant: [{
+    sortOrder: [{
+      by: 'ValueDate',
+      direction: #ASC
+    }],
+    visualizations: [{
+      type: #AS_LINEITEM
+    }]
+  }]
+}
+annotate view ZKKR_C_CASHFLOW with
+{
+  /* Facets */
+  @UI.facet: [
+    {
+      id: 'CashflowHeaderFacet',
+      purpose: #HEADER,
+      type: #DATAPOINT_REFERENCE,
+      targetQualifier: 'CashflowAmount',
+      position: 10
+    },
+    {
+      id: 'CashflowDetails',
+      purpose: #STANDARD,
+      type: #FIELDGROUP_REFERENCE,
+      label: 'Cashflow Details',
+      targetQualifier: 'CashflowInfo',
+      position: 10
+    },
+    {
+      id: 'AdminDetails',
+      purpose: #STANDARD,
+      type: #FIELDGROUP_REFERENCE,
+      label: 'Administrative Data',
+      targetQualifier: 'AdminInfo',
+      position: 20
+    }
+  ]
+
+  /* Line Item */
+  @UI.lineItem: [{
+    position: 10,
+    importance: #HIGH,
+    label: 'Cashflow ID'
+  }]
+  @UI.fieldGroup: [{
+    qualifier: 'CashflowInfo',
+    position: 10
+  }]
+  @UI.identification: [{ position: 10 }]
+  CashflowID;
+
+  @UI.hidden: true
+  PositionID;
+
+  @UI.lineItem: [{
+    position: 20,
+    importance: #HIGH,
+    label: 'Type'
+  }]
+  @UI.fieldGroup: [{
+    qualifier: 'CashflowInfo',
+    position: 20
+  }]
+  @UI.identification: [{ position: 20 }]
+  CashflowType;
+
+  @UI.lineItem: [{
+    position: 30,
+    importance: #HIGH,
+    label: 'Amount',
+    criticality: 'AmountCriticality'
+  }]
+  @UI.dataPoint: {
+    qualifier: 'CashflowAmount',
+    title: 'Cashflow Amount',
+    criticality: 'AmountCriticality'
+  }
+  @UI.fieldGroup: [{
+    qualifier: 'CashflowInfo',
+    position: 30
+  }]
+  @UI.identification: [{ position: 30 }]
+  Amount;
+
+  @UI.lineItem: [{
+    position: 40,
+    importance: #MEDIUM,
+    label: 'Currency'
+  }]
+  @UI.fieldGroup: [{
+    qualifier: 'CashflowInfo',
+    position: 40
+  }]
+  @UI.identification: [{ position: 40 }]
+  Currency;
+
+  @UI.lineItem: [{
+    position: 50,
+    importance: #HIGH,
+    label: 'Value Date'
+  }]
+  @UI.fieldGroup: [{
+    qualifier: 'CashflowInfo',
+    position: 50
+  }]
+  @UI.identification: [{ position: 50 }]
+  ValueDate;
+
+  /* Administrative fields */
+  @UI.fieldGroup: [{
+    qualifier: 'AdminInfo',
+    position: 10,
+    label: 'Created By'
+  }]
+  CreatedBy;
+
+  @UI.fieldGroup: [{
+    qualifier: 'AdminInfo',
+    position: 20,
+    label: 'Created At'
+  }]
+  CreatedAt;
+
+  @UI.fieldGroup: [{
+    qualifier: 'AdminInfo',
+    position: 30,
+    label: 'Changed By'
+  }]
+  ChangedBy;
+
+  @UI.fieldGroup: [{
+    qualifier: 'AdminInfo',
+    position: 40,
+    label: 'Changed At'
+  }]
+  ChangedAt;
+}

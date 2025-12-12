@@ -1,0 +1,6 @@
+@EndUserText.label: 'Treasury Position Monitor Service'
+define service ZKKR_UI_POSITION {
+  expose ZKKR_C_POSITION as Position;
+  expose ZKKR_C_CASHFLOW as Cashflow;
+  expose ZKKR_C_INSTRUMENT as Instrument;
+}

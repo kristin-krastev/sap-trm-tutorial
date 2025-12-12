@@ -1,0 +1,223 @@
+@Metadata.layer: #CORE
+@UI: {
+  headerInfo: {
+    typeName: 'Position',
+    typeNamePlural: 'Treasury Positions',
+    title: {
+      type: #STANDARD,
+      value: 'position_descr'
+    },
+    description: {
+      type: #STANDARD,
+      value: 'position_id'
+    }
+  },
+  presentationVariant: [{
+    sortOrder: [{
+      by: 'position_id',
+      direction: #DESC
+    }],
+    visualizations: [{
+      type: #AS_LINEITEM
+    }]
+  }]
+}
+annotate view ZKKR_C_POSITION with
+{
+  /* Selection Fields - appear in filter bar */
+  @UI.selectionField: [{ position: 10 }]
+  position_id;
+
+  @UI.selectionField: [{ position: 20 }]
+  position_descr;
+
+  @UI.selectionField: [{ position: 30 }]
+  instrument_id;
+
+  @UI.selectionField: [{ position: 40 }]
+  currency;
+
+  @UI.selectionField: [{ position: 50 }]
+  valid_from;
+
+  @UI.selectionField: [{ position: 60 }]
+  valid_to;
+
+  /* Facets - tabs and sections in object page */
+  @UI.facet: [
+    {
+      id: 'PositionHeaderFacet',
+      purpose: #HEADER,
+      type: #DATAPOINT_REFERENCE,
+      targetQualifier: 'PositionAmount',
+      position: 10
+    },
+    {
+      id: 'PositionDetails',
+      purpose: #STANDARD,
+      type: #FIELDGROUP_REFERENCE,
+      label: 'General Information',
+      targetQualifier: 'GeneralInfo',
+      position: 10
+    },
+    {
+      id: 'InstrumentDetails',
+      purpose: #STANDARD,
+      type: #FIELDGROUP_REFERENCE,
+      label: 'Instrument Information',
+      targetQualifier: 'InstrumentInfo',
+      position: 20
+    },
+    {
+      id: 'ValidityDetails',
+      purpose: #STANDARD,
+      type: #FIELDGROUP_REFERENCE,
+      label: 'Validity Period',
+      targetQualifier: 'ValidityInfo',
+      position: 30
+    },
+    {
+      id: 'CashflowsFacet',
+      purpose: #STANDARD,
+      type: #LINEITEM_REFERENCE,
+      label: 'Cashflows',
+      position: 40,
+      targetElement: '_Cashflow'
+    },
+    {
+      id: 'AdminDetails',
+      purpose: #STANDARD,
+      type: #FIELDGROUP_REFERENCE,
+      label: 'Administrative Data',
+      targetQualifier: 'AdminInfo',
+      position: 50
+    }
+  ]
+
+  /* Line Item - columns in list report */
+  @UI.lineItem: [{
+    position: 10,
+    importance: #HIGH,
+    label: 'Position ID'
+  }]
+  @UI.fieldGroup: [{
+    qualifier: 'GeneralInfo',
+    position: 10,
+    importance: #HIGH
+  }]
+  @UI.identification: [{ position: 10 }]
+  position_id;
+
+  @UI.lineItem: [{
+    position: 20,
+    importance: #HIGH,
+    label: 'Description'
+  }]
+  @UI.fieldGroup: [{
+    qualifier: 'GeneralInfo',
+    position: 20,
+    importance: #HIGH
+  }]
+  @UI.identification: [{ position: 20 }]
+  position_descr;
+
+  @UI.lineItem: [{
+    position: 30,
+    importance: #HIGH,
+    label: 'Instrument'
+  }]
+  @UI.fieldGroup: [{
+    qualifier: 'InstrumentInfo',
+    position: 10,
+    importance: #HIGH
+  }]
+  @UI.identification: [{ position: 30 }]
+  instrument_id;
+
+  @UI.lineItem: [{
+    position: 40,
+    importance: #HIGH,
+    label: 'Amount',
+    criticality: 'AmountCriticality'
+  }]
+  @UI.dataPoint: {
+    qualifier: 'PositionAmount',
+    title: 'Position Amount',
+    criticality: 'AmountCriticality'
+  }
+  @UI.fieldGroup: [{
+    qualifier: 'GeneralInfo',
+    position: 30,
+    importance: #HIGH
+  }]
+  @UI.identification: [{ position: 40 }]
+  amount;
+
+  @UI.lineItem: [{
+    position: 50,
+    importance: #MEDIUM,
+    label: 'Currency'
+  }]
+  @UI.fieldGroup: [{
+    qualifier: 'GeneralInfo',
+    position: 40,
+    importance: #MEDIUM
+  }]
+  @UI.identification: [{ position: 50 }]
+  currency;
+
+  @UI.lineItem: [{
+    position: 60,
+    importance: #MEDIUM,
+    label: 'Valid From'
+  }]
+  @UI.fieldGroup: [{
+    qualifier: 'ValidityInfo',
+    position: 10,
+    importance: #HIGH
+  }]
+  @UI.identification: [{ position: 60 }]
+  valid_from;
+
+  @UI.lineItem: [{
+    position: 70,
+    importance: #MEDIUM,
+    label: 'Valid To'
+  }]
+  @UI.fieldGroup: [{
+    qualifier: 'ValidityInfo',
+    position: 20,
+    importance: #HIGH
+  }]
+  @UI.identification: [{ position: 70 }]
+  valid_to;
+
+  /* Administrative fields */
+  @UI.fieldGroup: [{
+    qualifier: 'AdminInfo',
+    position: 10,
+    label: 'Created By'
+  }]
+  created_by;
+
+  @UI.fieldGroup: [{
+    qualifier: 'AdminInfo',
+    position: 20,
+    label: 'Created At'
+  }]
+  created_at;
+
+  @UI.fieldGroup: [{
+    qualifier: 'AdminInfo',
+    position: 30,
+    label: 'Changed By'
+  }]
+  changed_by;
+
+  @UI.fieldGroup: [{
+    qualifier: 'AdminInfo',
+    position: 40,
+    label: 'Changed At'
+  }]
+  changed_at;
+}
