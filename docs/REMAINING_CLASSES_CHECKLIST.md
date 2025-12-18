@@ -1,5 +1,21 @@
 # Remaining Classes - Quick Implementation Checklist
 
+## ⚠️ CRITICAL LESSON LEARNED (Dec 18, 2025)
+
+**DON'T FORGET THE CALCULATION CLASS!**
+
+When you change the helper method signature:
+1. ✅ Update handler class
+2. ✅ **Update calculation class** (`CL_CMM_[ENTITY]_CALC`)
+3. ✅ **Use "Where Used" to find ALL callers**
+4. ✅ **Add ALL modified classes to transport**
+
+Missing the calculation class = syntax error in test systems! 🚨
+
+See: `/workspace/docs/LESSONS_LEARNED_CALC_CLASS.md` for full details.
+
+---
+
 ## 📋 Classes to Fix
 
 - [ ] `CL_CMM_DESIGNATIONREQ_HELPER` → `CL_BP_CMM_DESIGNATION_REQUEST`
@@ -19,6 +35,7 @@
 ☐ Remove READ ENTITIES blocks (comment them out)
 ☐ Change LOOP from lt_cntrdeal_item to it_cntrdeal_item
 ☐ Save and activate
+☐ **RIGHT-CLICK method → "WHERE USED" - Find ALL callers!**
 ```
 
 ### **2. Handler Class** (20 min)
@@ -42,7 +59,54 @@
 ☐ Save and activate
 ```
 
-### **4. Unit Tests** (15 min)
+### **4. Calculation Class (CRITICAL!)** (15 min)
+
+```
+☐ Find calculation class: CL_CMM_[ENTITY]_CALC
+☐ Open if_sadl_exit_calc_element_read~calculate method
+☐ Find the calculate_overhedge call
+☐ Add item retrieval code BEFORE the call (READ ENTITIES allowed here!)
+☐ Update calculate_overhedge call to include it_cntrdeal_item parameter
+☐ Save and activate
+☐ Add to transport
+```
+
+**Code to add:**
+```abap
+" Read items for this request
+DATA lt_cntrdeal_item TYPE cl_[helper]=>ty_t_cntrdeal_item.
+CLEAR lt_cntrdeal_item.
+
+READ ENTITIES OF [root_entity]
+  ENTITY [entity_alias]
+    BY \_cntrdealitem
+      FIELDS ( counterdealitemuuid financialtransactionquantity )
+        WITH VALUE #( ( %tky-counterdealrequestuuid = <ls_original_data>-counterdealrequestuuid
+                        %tky-%is_draft              = if_abap_behv=>mk-on ) )
+  RESULT DATA(lt_items_draft).
+
+IF lt_items_draft IS NOT INITIAL.
+  lt_cntrdeal_item = CORRESPONDING #( lt_items_draft ).
+ELSE.
+  READ ENTITIES OF [root_entity]
+    ENTITY [entity_alias]
+      BY \_cntrdealitem
+        FIELDS ( counterdealitemuuid financialtransactionquantity )
+          WITH VALUE #( ( %tky-counterdealrequestuuid = <ls_original_data>-counterdealrequestuuid ) )
+    RESULT DATA(lt_items_active).
+  lt_cntrdeal_item = CORRESPONDING #( lt_items_active ).
+ENDIF.
+
+" Then update the call
+cl_[helper]=>calculate_overhedge(
+  EXPORTING
+    is_overhedge      = ls_calculate
+    it_cntrdeal_item  = lt_cntrdeal_item  " ← ADD THIS
+  IMPORTING
+    es_overhedge = ls_overhedge ).
+```
+
+### **5. Unit Tests** (15 min)
 
 ```
 ☐ Find test method that calls the helper
@@ -53,9 +117,11 @@
 ☐ Save and activate
 ```
 
-### **5. Verification** (5 min)
+### **6. Verification** (5 min)
 
 ```
+☐ Verify ALL callers found via "Where Used" are updated
+☐ Verify ALL updated classes are in transport
 ☐ Run ATC check - should show 0 errors for this class
 ☐ Run unit tests - all green
 ☐ Functional test in UI (if possible)
